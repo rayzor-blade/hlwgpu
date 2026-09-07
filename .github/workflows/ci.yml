@@ -73,3 +73,58 @@ jobs:
       # only way to test code that must not compile is to compile it.
       - name: Builder constraints
         run: crates/hlwgpu/test/constraints.sh
+
+  gpu:
+    name: it draws, under a HashLink that is not ash
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: gpu
+
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.6
+
+      # lavapipe is Mesa's software Vulkan. No GPU in a runner, and a software
+      # one is what makes a rendered pixel the same on every machine.
+      - name: Install lavapipe and the windowing headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            mesa-vulkan-drivers vulkan-tools \
+            libxkbcommon-dev libwayland-dev libx11-dev libxrandr-dev \
+            libxi-dev libxcursor-dev
+          vulkaninfo --summary | head -30 || true
+
+      # Upstream HashLink, deliberately: the library claims to load in any of
+      # them, and the only way to know is to use one that is not ours.
+      - name: Build upstream HashLink
+        run: |
+          sudo apt-get install -y --no-install-recommends libpcre2-dev zlib1g-dev
+          git clone --depth 1 https://github.com/HaxeFoundation/hashlink.git /tmp/hashlink
+          make -C /tmp/hashlink libhl hl -j"$(nproc)"
+          echo "/tmp/hashlink" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=/tmp/hashlink" >> "$GITHUB_ENV"
+
+      - name: Build the library
+        run: cargo build -p hlwgpu
+
+      - name: Draw things and check the pixels
+        run: |
+          mkdir -p run
+          cp target/debug/libhlwgpu.so run/wgpu.hdll
+          failed=0
+          for pair in Compute:compute Render:render Textured:textured Blend:blend \
+                      Depth:depth Conventions:conventions Instanced:instanced \
+                      Clipping:clipping Copies:copies MultiTarget:multitarget; do
+            main="${pair%%:*}"; out="${pair##*:}"
+            haxe -hl "run/$out.hl" -cp crates/hlwgpu/haxe -cp crates/hlwgpu/test -main "$main"
+            printf '%-12s ' "$out"
+            ( cd run && hl "$out.hl" ) || failed=1
+          done
+          exit $failed

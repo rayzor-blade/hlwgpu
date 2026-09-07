@@ -10,7 +10,7 @@
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 
-use hl_abi::{hlp_alloc_bytes, vbyte};
+use hl_abi::{hl_alloc_bytes, vbyte};
 use crate::bindings::kinds::Kind;
 use crate::handles::{kind_of, PendingRequests, Slab};
 
@@ -83,7 +83,7 @@ macro_rules! find {
 /// `String.fromUCS2` reads.
 unsafe fn ucs2_out(text: &str) -> *mut vbyte {
     let units: Vec<u16> = text.encode_utf16().collect();
-    let bytes = hlp_alloc_bytes(((units.len() + 1) * 2) as std::ffi::c_int);
+    let bytes = hl_alloc_bytes(((units.len() + 1) * 2) as std::ffi::c_int);
     if bytes.is_null() {
         return bytes;
     }
