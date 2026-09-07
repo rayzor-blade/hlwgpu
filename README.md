@@ -104,9 +104,10 @@ can write your own instead.
 | `crates/hlwindow` | a small [winit](https://github.com/rust-windowing/winit) companion, so there is a window to draw into. Neither crate depends on the other |
 | `crates/hl_native_gen` | writes every side of a HashLink native library from one declaration |
 
-[docs/using.md](docs/using.md) is what to know before writing against it,
-[docs/design.md](docs/design.md) is why it is built the way it is, and
-`crates/hlwgpu/spec/webgpu.idl` is the checklist it is measured against.
+## Read the docs
+- Convention - [docs/using.md](docs/using.md)
+- Design - [docs/design.md](docs/design.md)
+- WebGPU IDL - `crates/hlwgpu/spec/webgpu.idl` 
 
 ## Getting a window to draw into
 

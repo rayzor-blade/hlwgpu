@@ -9,7 +9,7 @@ This explains the decisions. For how to use the library, read the README and
 
 Modern GPU programming means Vulkan, D3D12, Metal, or something that abstracts
 all three. WebGPU is the only one of those with a browser implementation, and
-HashLink is going to wasm.
+HashLink is going to wasm via ash.
 
 `wgpu` is its Rust implementation. It already resolves to Vulkan, Metal and
 D3D12 underneath. Firefox, Servo and Deno ship it.
@@ -212,13 +212,7 @@ loudly rather than plausibly.
   those.
 - **GL or WebGL.** The point of WebGPU is not writing that translation.
 
-## Still open
+## Where it has got to
 
-- **The browser half has never run.** It is generated and it links, with the
-  right imports and exports. Nothing has executed it in a page.
-- **Queries, render bundles, explicit layouts and async pipeline creation.**
-  Instrumentation and optimisation. None blocks a renderer.
-- **The declaration parser should use nom or pest.** It splits strings by
-  hand. That is fine for `prim` and `js` lines and will not stay fine.
-- **`haxelib.json` has a version nothing sets.** The release workflow does not
-  read it, so a tag and the manifest can disagree.
+`docs/backlog.md` has what is done, what is next and what is deliberately not
+being done.
