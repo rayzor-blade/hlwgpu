@@ -471,6 +471,10 @@ class _Native {
 
 	// What a frame capture shows instead of a list of anonymous draws. Nothing
 	// reads these at run time.
+	// 
+	// The label goes to whatever is recording: the pass while one is open, the
+	// encoder otherwise. Sending it to a locked encoder is an error, and a caller
+	// should not have to know which they are in.
 	@:hlNative("wgpu", "wgpu_encoder_push_debug_group")
 	public static function encoder_push_debug_group(encoder : Int, label : hl.Bytes) : Void {
 		return;

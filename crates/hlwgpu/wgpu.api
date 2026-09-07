@@ -379,11 +379,15 @@ prim render_draw_indexed_indirect(encoder: i32, buffer: i32, offset: i32) -> voi
 
 # What a frame capture shows instead of a list of anonymous draws. Nothing
 # reads these at run time.
+#
+# The label goes to whatever is recording: the pass while one is open, the
+# encoder otherwise. Sending it to a locked encoder is an error, and a caller
+# should not have to know which they are in.
 prim encoder_push_debug_group(encoder: i32, label: bytes) -> void
-  js H.get("encoder", encoder).pushDebugGroup(H.readStr(label))
+  js H.recording(encoder).pushDebugGroup(H.readStr(label))
 
 prim encoder_pop_debug_group(encoder: i32) -> void
-  js H.get("encoder", encoder).popDebugGroup()
+  js H.recording(encoder).popDebugGroup()
 
 prim encoder_insert_debug_marker(encoder: i32, label: bytes) -> void
-  js H.get("encoder", encoder).insertDebugMarker(H.readStr(label))
+  js H.recording(encoder).insertDebugMarker(H.readStr(label))

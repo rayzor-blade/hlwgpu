@@ -351,6 +351,11 @@ export function makeHandles(rt) {
     described.delete(encoder);
   }
 
+  // Whatever is recording: the pass while one is open, the encoder otherwise.
+  function recording(encoder) {
+    return passes.get(encoder) ?? get("encoder", encoder);
+  }
+
   function formatName(which) {
     return FORMATS[which] ?? FORMATS[0];
   }
@@ -390,7 +395,7 @@ export function makeHandles(rt) {
     put, get, drop, pending, requestReady, requestResult,
     putDevice, queueOf, dropDevice, takeError,
     str, readStr, view, handles, writeInto,
-    beginPass, pass, endPass, formatName, canvasFormat, attributes, packAttribute, buildPipeline,
+    beginPass, pass, endPass, recording, formatName, canvasFormat, attributes, packAttribute, buildPipeline,
     resetPass, addColour, addDepth, beginDescribedPass, resource, layoutOf, releaseFrame,
     limitName, registerCanvas, canvas, LIMITS,
   };
@@ -564,8 +569,12 @@ export function hlwgpuImports(rt) {
     hlwgpu_render_draw_indexed_indirect: (encoder, buffer, offset) => { H.pass(encoder).drawIndexedIndirect(H.get("buffer", buffer), offset); },
     // What a frame capture shows instead of a list of anonymous draws. Nothing
     // reads these at run time.
-    hlwgpu_encoder_push_debug_group: (encoder, label) => { H.get("encoder", encoder).pushDebugGroup(H.readStr(label)); },
-    hlwgpu_encoder_pop_debug_group: (encoder) => { H.get("encoder", encoder).popDebugGroup(); },
-    hlwgpu_encoder_insert_debug_marker: (encoder, label) => { H.get("encoder", encoder).insertDebugMarker(H.readStr(label)); },
+    // 
+    // The label goes to whatever is recording: the pass while one is open, the
+    // encoder otherwise. Sending it to a locked encoder is an error, and a caller
+    // should not have to know which they are in.
+    hlwgpu_encoder_push_debug_group: (encoder, label) => { H.recording(encoder).pushDebugGroup(H.readStr(label)); },
+    hlwgpu_encoder_pop_debug_group: (encoder) => { H.recording(encoder).popDebugGroup(); },
+    hlwgpu_encoder_insert_debug_marker: (encoder, label) => { H.recording(encoder).insertDebugMarker(H.readStr(label)); },
   };
 }

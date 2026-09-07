@@ -323,6 +323,11 @@ export function makeHandles(rt) {
     described.delete(encoder);
   }
 
+  // Whatever is recording: the pass while one is open, the encoder otherwise.
+  function recording(encoder) {
+    return passes.get(encoder) ?? get("encoder", encoder);
+  }
+
   function formatName(which) {
     return FORMATS[which] ?? FORMATS[0];
   }
@@ -362,7 +367,7 @@ export function makeHandles(rt) {
     put, get, drop, pending, requestReady, requestResult,
     putDevice, queueOf, dropDevice, takeError,
     str, readStr, view, handles, writeInto,
-    beginPass, pass, endPass, formatName, canvasFormat, attributes, packAttribute, buildPipeline,
+    beginPass, pass, endPass, recording, formatName, canvasFormat, attributes, packAttribute, buildPipeline,
     resetPass, addColour, addDepth, beginDescribedPass, resource, layoutOf, releaseFrame,
     limitName, registerCanvas, canvas, LIMITS,
   };

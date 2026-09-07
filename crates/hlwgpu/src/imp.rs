@@ -1453,20 +1453,33 @@ pub unsafe fn render_draw_indexed_indirect(encoder: i32, buffer: i32, offset: i3
 
 // -- labels for a capture -----------------------------------------------------
 
+/// A debug label belongs to whatever is recording: the pass while one is
+/// open, the encoder otherwise. Sending an encoder one while a pass is open is
+/// an error, and a caller should not have to know which they are in.
 pub unsafe fn encoder_push_debug_group(encoder: i32, label: *mut vbyte) {
     let entry = find!(ENCODERS, encoder);
     let label = ucs2_in(label);
     let mut held = entry.lock().unwrap();
-    if let Some(encoder) = held.encoder.as_mut() {
-        encoder.push_debug_group(&label);
+    match held.pass.as_mut() {
+        Some(pass) => pass.push_debug_group(&label),
+        None => {
+            if let Some(encoder) = held.encoder.as_mut() {
+                encoder.push_debug_group(&label);
+            }
+        }
     }
 }
 
 pub unsafe fn encoder_pop_debug_group(encoder: i32) {
     let entry = find!(ENCODERS, encoder);
     let mut held = entry.lock().unwrap();
-    if let Some(encoder) = held.encoder.as_mut() {
-        encoder.pop_debug_group();
+    match held.pass.as_mut() {
+        Some(pass) => pass.pop_debug_group(),
+        None => {
+            if let Some(encoder) = held.encoder.as_mut() {
+                encoder.pop_debug_group();
+            }
+        }
     }
 }
 
@@ -1474,7 +1487,12 @@ pub unsafe fn encoder_insert_debug_marker(encoder: i32, label: *mut vbyte) {
     let entry = find!(ENCODERS, encoder);
     let label = ucs2_in(label);
     let mut held = entry.lock().unwrap();
-    if let Some(encoder) = held.encoder.as_mut() {
-        encoder.insert_debug_marker(&label);
+    match held.pass.as_mut() {
+        Some(pass) => pass.insert_debug_marker(&label),
+        None => {
+            if let Some(encoder) = held.encoder.as_mut() {
+                encoder.insert_debug_marker(&label);
+            }
+        }
     }
 }

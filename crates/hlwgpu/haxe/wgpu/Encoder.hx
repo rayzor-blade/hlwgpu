@@ -62,6 +62,40 @@ abstract Encoder(Int) from Int to Int {
 		_Native.render_set_scissor_rect(this, x, y, width, height);
 	}
 
+	/** The colour a `Constant` or `OneMinusConstant` blend factor means. **/
+	public inline function setBlendConstant(r : Float, g : Float, b : Float, a = 1.0) : Void {
+		_Native.render_set_blend_constant(this, r, g, b, a);
+	}
+
+	/**
+		Draws with the counts taken from a buffer rather than from here, so
+		work the GPU produced can be drawn without reading it back first.
+
+		Four `UInt32` at `offset`: vertex count, instance count, first vertex,
+		first instance.
+	**/
+	public inline function drawIndirect(commands : Buffer, offset = 0) : Void {
+		_Native.render_draw_indirect(this, commands, offset);
+	}
+
+	/** The same for indexed drawing. Five `UInt32` at `offset`. **/
+	public inline function drawIndexedIndirect(commands : Buffer, offset = 0) : Void {
+		_Native.render_draw_indexed_indirect(this, commands, offset);
+	}
+
+	/** Names the draws that follow, for a frame capture. **/
+	public inline function pushDebugGroup(label : String) : Void {
+		_Native.encoder_push_debug_group(this, @:privateAccess label.bytes);
+	}
+
+	public inline function popDebugGroup() : Void {
+		_Native.encoder_pop_debug_group(this);
+	}
+
+	public inline function insertDebugMarker(label : String) : Void {
+		_Native.encoder_insert_debug_marker(this, @:privateAccess label.bytes);
+	}
+
 	public inline function draw(vertices : Int, instances = 1) : Void {
 		_Native.render_draw(this, vertices, instances);
 	}
