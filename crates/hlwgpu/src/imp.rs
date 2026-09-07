@@ -1420,3 +1420,61 @@ pub unsafe fn render_pipeline_build(builder: i32) -> i32 {
     BUILDERS.lock().unwrap().remove(builder);
     RENDER_PIPELINES.lock().unwrap().put(pipeline)
 }
+
+// -- pass state ---------------------------------------------------------------
+
+pub unsafe fn render_set_blend_constant(encoder: i32, r: f64, g: f64, b: f64, a: f64) {
+    let entry = find!(ENCODERS, encoder);
+    let mut held = entry.lock().unwrap();
+    if let Some(pass) = held.pass.as_mut() {
+        pass.set_blend_constant(wgpu::Color { r, g, b, a });
+    }
+}
+
+// -- drawing the GPU decided on -----------------------------------------------
+
+pub unsafe fn render_draw_indirect(encoder: i32, buffer: i32, offset: i32) {
+    let entry = find!(ENCODERS, encoder);
+    let buffer = find!(BUFFERS, buffer);
+    let mut held = entry.lock().unwrap();
+    if let Some(pass) = held.pass.as_mut() {
+        pass.draw_indirect(&buffer, offset.max(0) as u64);
+    }
+}
+
+pub unsafe fn render_draw_indexed_indirect(encoder: i32, buffer: i32, offset: i32) {
+    let entry = find!(ENCODERS, encoder);
+    let buffer = find!(BUFFERS, buffer);
+    let mut held = entry.lock().unwrap();
+    if let Some(pass) = held.pass.as_mut() {
+        pass.draw_indexed_indirect(&buffer, offset.max(0) as u64);
+    }
+}
+
+// -- labels for a capture -----------------------------------------------------
+
+pub unsafe fn encoder_push_debug_group(encoder: i32, label: *mut vbyte) {
+    let entry = find!(ENCODERS, encoder);
+    let label = ucs2_in(label);
+    let mut held = entry.lock().unwrap();
+    if let Some(encoder) = held.encoder.as_mut() {
+        encoder.push_debug_group(&label);
+    }
+}
+
+pub unsafe fn encoder_pop_debug_group(encoder: i32) {
+    let entry = find!(ENCODERS, encoder);
+    let mut held = entry.lock().unwrap();
+    if let Some(encoder) = held.encoder.as_mut() {
+        encoder.pop_debug_group();
+    }
+}
+
+pub unsafe fn encoder_insert_debug_marker(encoder: i32, label: *mut vbyte) {
+    let entry = find!(ENCODERS, encoder);
+    let label = ucs2_in(label);
+    let mut held = entry.lock().unwrap();
+    if let Some(encoder) = held.encoder.as_mut() {
+        encoder.insert_debug_marker(&label);
+    }
+}

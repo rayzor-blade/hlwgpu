@@ -449,4 +449,41 @@ class _Native {
 		return;
 	}
 
+	// The colour a `Constant` or `OneMinusConstant` blend factor refers to.
+	@:hlNative("wgpu", "wgpu_render_set_blend_constant")
+	public static function render_set_blend_constant(encoder : Int, r : Float, g : Float, b : Float, a : Float) : Void {
+		return;
+	}
+
+	// Takes the vertex count, instance count and first indices from a buffer
+	// rather than from here, so work the GPU produced can be drawn without
+	// reading it back first. Four `u32` at `offset`.
+	@:hlNative("wgpu", "wgpu_render_draw_indirect")
+	public static function render_draw_indirect(encoder : Int, buffer : Int, offset : Int) : Void {
+		return;
+	}
+
+	// The same for indexed drawing. Five `u32` at `offset`.
+	@:hlNative("wgpu", "wgpu_render_draw_indexed_indirect")
+	public static function render_draw_indexed_indirect(encoder : Int, buffer : Int, offset : Int) : Void {
+		return;
+	}
+
+	// What a frame capture shows instead of a list of anonymous draws. Nothing
+	// reads these at run time.
+	@:hlNative("wgpu", "wgpu_encoder_push_debug_group")
+	public static function encoder_push_debug_group(encoder : Int, label : hl.Bytes) : Void {
+		return;
+	}
+
+	@:hlNative("wgpu", "wgpu_encoder_pop_debug_group")
+	public static function encoder_pop_debug_group(encoder : Int) : Void {
+		return;
+	}
+
+	@:hlNative("wgpu", "wgpu_encoder_insert_debug_marker")
+	public static function encoder_insert_debug_marker(encoder : Int, label : hl.Bytes) : Void {
+		return;
+	}
+
 }

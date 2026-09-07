@@ -22,17 +22,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-latest,     name: macos-arm64,  built: lib,  ext: dylib }
-          - { os: macos-13,         name: macos-x64,    built: lib,  ext: dylib }
-          - { os: ubuntu-24.04,     name: linux-x64,    built: lib,  ext: so }
-          - { os: ubuntu-24.04-arm, name: linux-arm64,  built: lib,  ext: so }
-          - { os: windows-2022,     name: windows-x64,  built: "",   ext: dll }
+          # x86_64 macOS is cross-compiled from an arm64 runner: the Intel
+          # runners are retired, and a job asking for one waits for ever.
+          - { os: macos-latest,     name: macos-arm64, target: aarch64-apple-darwin,      built: lib, ext: dylib }
+          - { os: macos-latest,     name: macos-x64,   target: x86_64-apple-darwin,       built: lib, ext: dylib }
+          - { os: ubuntu-24.04,     name: linux-x64,   target: x86_64-unknown-linux-gnu,  built: lib, ext: so }
+          - { os: ubuntu-24.04-arm, name: linux-arm64, target: aarch64-unknown-linux-gnu, built: lib, ext: so }
+          - { os: windows-2022,     name: windows-x64, target: x86_64-pc-windows-msvc,    built: "",  ext: dll }
           # D3D12 is what Windows takes by default. This one carries Vulkan
           # as well, chosen with WGPU_BACKEND=vulkan.
-          - { os: windows-2022,     name: windows-x64-vulkan, built: "", ext: dll, features: vulkan }
+          - { os: windows-2022,     name: windows-x64-vulkan, target: x86_64-pc-windows-msvc, built: "", ext: dll, features: vulkan }
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: release-${{ matrix.name }}
@@ -63,17 +67,20 @@ jobs:
           echo "found libhl.lib in $libdir"
           echo "HL_LIB_DIR=$libdir" >> "$GITHUB_ENV"
 
+      # bash on every platform: the runner's default on Windows is PowerShell,
+      # which does not read a trailing backslash as a continuation.
       - name: Build
+        shell: bash
         run: |
-          cargo build --release -p hlwgpu -p hlwindow \
+          cargo build --release --target ${{ matrix.target }} -p hlwgpu -p hlwindow \
             ${{ matrix.features && format('--features {0}', matrix.features) || '' }}
 
       - name: Name them as HashLink expects
         shell: bash
         run: |
           mkdir -p out
-          cp "target/release/${{ matrix.built }}hlwgpu.${{ matrix.ext }}" out/wgpu.hdll
-          cp "target/release/${{ matrix.built }}hlwindow.${{ matrix.ext }}" out/window.hdll
+          cp "target/${{ matrix.target }}/release/${{ matrix.built }}hlwgpu.${{ matrix.ext }}" out/wgpu.hdll
+          cp "target/${{ matrix.target }}/release/${{ matrix.built }}hlwindow.${{ matrix.ext }}" out/window.hdll
           cp LICENSE README.md out/
           ls -la out
 

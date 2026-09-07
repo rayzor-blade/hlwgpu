@@ -554,5 +554,18 @@ export function hlwgpuImports(rt) {
     // presents at the end of its task, so this only releases the view there.
     hlwgpu_surface_present: (queue, surface) => { H.releaseFrame(surface); },
     hlwgpu_surface_destroy: (surface) => { H.drop("surface", surface); },
+    // The colour a `Constant` or `OneMinusConstant` blend factor refers to.
+    hlwgpu_render_set_blend_constant: (encoder, r, g, b, a) => { H.pass(encoder).setBlendConstant({ r, g, b, a }); },
+    // Takes the vertex count, instance count and first indices from a buffer
+    // rather than from here, so work the GPU produced can be drawn without
+    // reading it back first. Four `u32` at `offset`.
+    hlwgpu_render_draw_indirect: (encoder, buffer, offset) => { H.pass(encoder).drawIndirect(H.get("buffer", buffer), offset); },
+    // The same for indexed drawing. Five `u32` at `offset`.
+    hlwgpu_render_draw_indexed_indirect: (encoder, buffer, offset) => { H.pass(encoder).drawIndexedIndirect(H.get("buffer", buffer), offset); },
+    // What a frame capture shows instead of a list of anonymous draws. Nothing
+    // reads these at run time.
+    hlwgpu_encoder_push_debug_group: (encoder, label) => { H.get("encoder", encoder).pushDebugGroup(H.readStr(label)); },
+    hlwgpu_encoder_pop_debug_group: (encoder) => { H.get("encoder", encoder).popDebugGroup(); },
+    hlwgpu_encoder_insert_debug_marker: (encoder, label) => { H.get("encoder", encoder).insertDebugMarker(H.readStr(label)); },
   };
 }

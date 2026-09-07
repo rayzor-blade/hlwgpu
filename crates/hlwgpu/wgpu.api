@@ -356,3 +356,34 @@ prim surface_present(queue: i32, surface: i32) -> void
 
 prim surface_destroy(surface: i32) -> void
   js H.drop("surface", surface)
+
+# -- pass state -------------------------------------------------------------
+
+# The colour a `Constant` or `OneMinusConstant` blend factor refers to.
+prim render_set_blend_constant(encoder: i32, r: f64, g: f64, b: f64, a: f64) -> void
+  js H.pass(encoder).setBlendConstant({ r, g, b, a })
+
+# -- drawing the GPU decides on -----------------------------------------------
+
+# Takes the vertex count, instance count and first indices from a buffer
+# rather than from here, so work the GPU produced can be drawn without
+# reading it back first. Four `u32` at `offset`.
+prim render_draw_indirect(encoder: i32, buffer: i32, offset: i32) -> void
+  js H.pass(encoder).drawIndirect(H.get("buffer", buffer), offset)
+
+# The same for indexed drawing. Five `u32` at `offset`.
+prim render_draw_indexed_indirect(encoder: i32, buffer: i32, offset: i32) -> void
+  js H.pass(encoder).drawIndexedIndirect(H.get("buffer", buffer), offset)
+
+# -- labels for a capture -----------------------------------------------------
+
+# What a frame capture shows instead of a list of anonymous draws. Nothing
+# reads these at run time.
+prim encoder_push_debug_group(encoder: i32, label: bytes) -> void
+  js H.get("encoder", encoder).pushDebugGroup(H.readStr(label))
+
+prim encoder_pop_debug_group(encoder: i32) -> void
+  js H.get("encoder", encoder).popDebugGroup()
+
+prim encoder_insert_debug_marker(encoder: i32, label: bytes) -> void
+  js H.get("encoder", encoder).insertDebugMarker(H.readStr(label))
