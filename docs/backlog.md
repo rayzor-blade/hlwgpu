@@ -50,6 +50,11 @@ concepts with no wgpu counterpart. Two `constructor` entries are error types
 rather than methods. Adding them would break the rule that no primitive works
 on one target only.
 
+**Lifetime helpers.** Nothing tracks what a program forgot to destroy. A
+scope object that destroys what was registered with it, and a debug-build
+count of live handles per kind, would both help. `Slab::live` already counts
+them; no primitive exposes it.
+
 **Housekeeping.**
 
 - The declaration parser splits strings by hand. That is fine for `prim` and

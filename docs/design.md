@@ -14,7 +14,7 @@ HashLink is going to wasm via ash.
 `wgpu` is its Rust implementation. It already resolves to Vulkan, Metal and
 D3D12 underneath. Firefox, Servo and Deno ship it.
 
-So one Haxe program runs on a desktop and in a page, with one API and one set
+So one Haxe program runs on a desktop and in a webpage, with one API and one set
 of shaders.
 
 ## The implementation is native; wasm only forwards
@@ -37,15 +37,31 @@ the library does it itself.
 
 **`wgpu.api` is the only place a primitive is written down.**
 
-A primitive otherwise appears five times: the Rust that implements it, the
-Rust that forwards it, the JavaScript, the Haxe extern, and the host contract.
-Keeping five copies in step by hand is how a wrong argument type gets into one
-of them.
+The same primitive has to exist in several files at once, and they have to
+agree on its name and every argument. Nothing checks that agreement, so a
+mismatch is silent.
 
-`build.rs` generates the other four. Enumerations come from the vendored
-WebGPU IDL, so their values and order are the spec's.
+This one line:
 
-Only `imp.rs` and the `js` line of each primitive are hand-written.
+```
+prim buffer_create(device: i32, size: i32, usage: i32) -> i32
+```
+
+produces all of these:
+
+| file | what it gets |
+|---|---|
+| `haxe/wgpu/_Native.hx` | the extern a Haxe program calls |
+| `src/native.rs` | the `hlp_wgpu_buffer_create` a VM looks up |
+| `src/wasm.rs` | the same export, calling out to a host instead |
+| `js/hlwgpu.js` | what a page runs |
+| `IMPORTS.md` | the entry another host has to provide |
+
+`build.rs` writes all five. Enumerations come from the vendored WebGPU IDL, so
+their values and order are the spec's.
+
+Only the Rust body in `imp.rs` and the `js` line of the declaration are
+written by hand.
 
 ## Handles are integers
 
@@ -66,11 +82,12 @@ fails its kind check.
 
 **Everything with a `destroy()` needs one.**
 
-ash runs no finalizers. Upstream HashLink does, so a library that relied on
+ash runs no finalizers. Upstream HashLink does, so a library that leaned on
 them would behave differently on the two VMs.
 
-`wgpu.Scope` destroys everything registered with it. Debug builds can dump
-what is still alive.
+Destroying twice is safe, so a caller can be defensive. The handle's
+generation is bumped, and anything still holding the old one raises rather
+than reaching whatever took the slot.
 
 Explicit destruction is the model, not a gap to fill in later.
 
