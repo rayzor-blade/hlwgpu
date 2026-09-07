@@ -1,0 +1,75 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: build, lint and test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+          targets: wasm32-wasip1
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: check
+
+      # winit reaches X11 and Wayland through these.
+      - name: Install the windowing headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libwayland-dev libx11-dev libxrandr-dev \
+            libxi-dev libxcursor-dev
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace
+
+      # The wasm side of the library holds no implementation, so nothing above
+      # compiles it. A mistake in the forwarding shim only shows here.
+      - name: Clippy, wasm
+        run: cargo clippy -p hlwgpu --target wasm32-wasip1 --no-default-features -- -D warnings
+
+      # `build.rs` writes the Haxe externs, the JavaScript and IMPORTS.md into
+      # the tree, and they are committed because the people who need them are
+      # not building the Rust. If a declaration changed without them, someone
+      # is reading a stale extern.
+      - name: The generated files are the ones committed
+        run: |
+          cargo build --workspace
+          git diff --exit-code || {
+            echo "::error::a build changed committed files; commit what build.rs wrote"
+            exit 1
+          }
+
+  builder:
+    name: the builder refuses what it should
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.6
+
+      # The type states only hold if something tries to break them, and the
+      # only way to test code that must not compile is to compile it.
+      - name: Builder constraints
+        run: crates/hlwgpu/test/constraints.sh
