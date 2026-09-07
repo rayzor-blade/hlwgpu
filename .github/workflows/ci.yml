@@ -106,10 +106,14 @@ jobs:
       - name: Build upstream HashLink
         run: |
           git clone --depth 1 https://github.com/HaxeFoundation/hashlink.git /tmp/hashlink
-          # Only the VM. `make` would build every optional library with it,
-          # and those want SDL, OpenAL and the rest, none of which this needs.
+          # Only the VM. Every optional library is off: they want libpng,
+          # SDL, OpenAL and the rest, and cmake looks for those while
+          # configuring, so leaving them on fails before a build starts.
           cmake -S /tmp/hashlink -B /tmp/hashlink/build \
-            -DCMAKE_BUILD_TYPE=Release -DWITH_VM=ON
+            -DCMAKE_BUILD_TYPE=Release -DWITH_VM=ON \
+            -DWITH_FMT=OFF -DWITH_HEAPS=OFF -DWITH_OPENAL=OFF -DWITH_SDL=OFF \
+            -DWITH_SQLITE=OFF -DWITH_SSL=OFF -DWITH_UI=OFF -DWITH_UV=OFF \
+            -DWITH_VIDEO=OFF
           cmake --build /tmp/hashlink/build --target hl -j"$(nproc)"
           hldir=$(dirname "$(find /tmp/hashlink/build -type f -name hl -perm -u+x | head -1)")
           echo "found the VM in $hldir"
