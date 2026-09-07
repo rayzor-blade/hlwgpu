@@ -133,7 +133,7 @@ Structured data does not.
 
 hlwgpu accepts WGSL only.
 
-WGSL is the only shading language browsers accept. `wgpu` also accepts SPIR-V
+WGSL is now a shading language modern browsers accept. `wgpu` also accepts SPIR-V
 and GLSL natively, but exposing those would give the native build capabilities
 the browser build lacks.
 
@@ -161,18 +161,6 @@ software rasteriser.
 Tests are written so they cannot pass without the feature under test. The
 depth test draws the far object last; the stencil test draws over the whole
 target and is masked to a region.
-
-## Changes this required in ash
-
-**Native dispatch.** ash's interpreter called natives through a hand-written
-table of signatures, and an unlisted combination was a runtime error. Three
-were added by hand in one afternoon before the table was generated instead.
-It now lives in ash's `ash_native_call` crate.
-
-**Symbol naming.** `wgpu.hdll` originally imported `hlp_alloc_bytes`, which is
-ash-specific. Upstream HashLink exports `hl_alloc_bytes`. Every test ran under
-ash, so the portability claim was untested. CI now builds upstream HashLink,
-and the library imports one symbol.
 
 ## Failed lookups
 
