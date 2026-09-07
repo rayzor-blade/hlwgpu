@@ -63,31 +63,11 @@ open, or a build with nowhere to draw, will not compile.
 shader locations from the formats you list. If you need a layout that is not
 packed, `attribute(format, offset, location)` places one by hand.
 
-## Coordinates
+## Three things to know
 
-WebGPU's coordinates are not OpenGL's. These are the two differences that catch
-people out:
-
-- Clip space has +y pointing up, but the first row of a texture is the top row.
-  So geometry at +y comes back near the start of a readback buffer, and texture
-  coordinates start at the top left corner.
-- Depth runs from 0 to 1, not from -1 to 1. A vertex at z = -0.5 is behind the
-  near plane, so it is clipped away rather than drawn in front of everything.
-
-See `test/Conventions.hx`
-
-## Destroying things
-
-Call `destroy()` on anything that has it. Buffers, textures and pipelines are
-not freed when they go out of scope, so anything you do not destroy holds its
-GPU memory until the process exits. Destroying something twice is safe.
-
-## Waiting
-
-Nothing in this library blocks. Anything that takes time gives you a `Request`
-instead: check `ready` whenever you like, or call `await()` to wait for the
-result. `await()` yields between checks rather than spinning, so your other
-threads keep running while the GPU works.
+Coordinates are WebGPU's and not OpenGL's, nothing is freed for you, and no
+call in this library blocks. [docs/using.md](docs/using.md) is those three in
+full, and they are worth reading before the first surprise rather than after.
 
 ## Native target and Browser via wasm
 
@@ -101,12 +81,12 @@ it in a page.
 hlwgpu's wasm tooling is designed around ash's, but it is not tied to it. A
 WebAssembly module cannot reach a GPU or call JavaScript on its own, so
 `wgpu.wasm` contains no GPU code at all and forwards every call out to whatever
-is hosting it. In a page that is `js/hlwgpu.js`, which does the real work
+is hosting it. In a page that is `crates/hlwgpu/js/hlwgpu.js`, which does the real work
 against `navigator.gpu`: include it with a script tag and pass what it exports
 to the module as imports. Nothing needs compiling.
 
-`IMPORTS.md` lists every function a host has to provide, so you can write your
-own instead.
+`crates/hlwgpu/IMPORTS.md` lists every function a host has to provide, so you
+can write your own instead.
 
 ## What is in here
 
@@ -116,7 +96,8 @@ own instead.
 | `crates/hlwindow` | a small [winit](https://github.com/rust-windowing/winit) companion, so there is a window to draw into. Neither crate depends on the other |
 | `crates/hl_native_gen` | writes every side of a HashLink native library from one declaration |
 
-`docs/design.md` is why it is built the way it is, and
+[docs/using.md](docs/using.md) is what to know before writing against it,
+[docs/design.md](docs/design.md) is why it is built the way it is, and
 `crates/hlwgpu/spec/webgpu.idl` is the checklist it is measured against.
 
 ## Getting a window to draw into
