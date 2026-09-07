@@ -1,0 +1,159 @@
+name: release
+
+# Tag a version to publish one. `workflow_dispatch` builds everything without
+# publishing, which is how to find out whether a platform still compiles.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  native:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest,     name: macos-arm64,  built: lib,  ext: dylib }
+          - { os: macos-13,         name: macos-x64,    built: lib,  ext: dylib }
+          - { os: ubuntu-24.04,     name: linux-x64,    built: lib,  ext: so }
+          - { os: ubuntu-24.04-arm, name: linux-arm64,  built: lib,  ext: so }
+          - { os: windows-2022,     name: windows-x64,  built: "",   ext: dll }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release-${{ matrix.name }}
+
+      - name: Install the windowing headers
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libwayland-dev libx11-dev libxrandr-dev \
+            libxi-dev libxcursor-dev
+
+      # MSVC will not leave a symbol undefined in a DLL, so wgpu.hdll has to
+      # be linked against the VM's import library. Only the VM is built; its
+      # optional libraries want SDL and the rest, and cmake looks for those
+      # while configuring.
+      - name: Build HashLink for its import library
+        if: startsWith(matrix.os, 'windows')
+        shell: bash
+        run: |
+          git clone --depth 1 https://github.com/HaxeFoundation/hashlink.git /tmp/hashlink
+          cmake -S /tmp/hashlink -B /tmp/hashlink/build -DWITH_VM=ON \
+            -DWITH_FMT=OFF -DWITH_HEAPS=OFF -DWITH_OPENAL=OFF -DWITH_SDL=OFF \
+            -DWITH_SQLITE=OFF -DWITH_SSL=OFF -DWITH_UI=OFF -DWITH_UV=OFF \
+            -DWITH_VIDEO=OFF
+          cmake --build /tmp/hashlink/build --config Release --target libhl
+          libdir=$(dirname "$(find /tmp/hashlink/build -name 'libhl.lib' | head -1)")
+          echo "found libhl.lib in $libdir"
+          echo "HL_LIB_DIR=$libdir" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: cargo build --release -p hlwgpu -p hlwindow
+
+      - name: Name them as HashLink expects
+        shell: bash
+        run: |
+          mkdir -p out
+          cp "target/release/${{ matrix.built }}hlwgpu.${{ matrix.ext }}" out/wgpu.hdll
+          cp "target/release/${{ matrix.built }}hlwindow.${{ matrix.ext }}" out/window.hdll
+          cp LICENSE README.md out/
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hlwgpu-${{ matrix.name }}
+          path: out/
+
+  wasm:
+    name: wasm side module
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # A side module is position-independent and the shipped core and std are
+      # not, so they are rebuilt. That needs nightly and rust-src.
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: wasm32-wasip1
+          components: rust-src
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release-wasm
+
+      - name: Build
+        run: scripts/build_wasm.sh "$PWD/out"
+
+      # Nothing inside the module calls a primitive: the program does, by
+      # name, after loading it. If one is missing, it is missing quietly.
+      - name: Every primitive is exported
+        run: |
+          missing=0
+          for p in $(sed -n 's/^prim \([a-z_0-9]*\).*/hlp_wgpu_\1/p' crates/hlwgpu/wgpu.api); do
+            strings out/wgpu.wasm | grep -q "$p" || { echo "::error::$p is not exported"; missing=1; }
+          done
+          exit $missing
+
+      - run: cp LICENSE README.md crates/hlwgpu/IMPORTS.md out/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hlwgpu-wasm
+          path: out/
+
+  haxe:
+    name: haxe sources
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collect
+        run: |
+          mkdir -p out
+          cp -r crates/hlwgpu/haxe/wgpu out/
+          cp -r crates/hlwindow/haxe/window out/
+          cp haxelib.json LICENSE README.md out/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hlwgpu-haxe
+          path: out/
+
+  publish:
+    name: publish
+    needs: [native, wasm, haxe]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: One archive per thing
+        run: |
+          mkdir -p release
+          for dir in artifacts/*/; do
+            name=$(basename "$dir")
+            (cd "$dir" && zip -qr "../../release/$name.zip" .)
+          done
+          ls -la release
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release/*.zip
+          generate_release_notes: true

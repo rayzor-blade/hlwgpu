@@ -287,9 +287,13 @@ fn rust_head(out: &mut String, d: &Decl, p: &Prim) {
 
 fn rust_tail(out: &mut String, d: &Decl, p: &Prim) {
     out.push_str("}\n");
+    // The resolver carries the library's name. `hlp_open` or
+    // `hlp_instance_create` is a name any library might export, and two
+    // libraries in one program would then be offering the same symbol.
     let _ = writeln!(
         out,
-        "define_prim!(hlp_{}, {}_{}, \"{}\");\n",
+        "define_prim!(hlp_{}_{}, {}_{}, \"{}\");\n",
+        d.library,
         p.name,
         d.library,
         p.name,
@@ -473,7 +477,13 @@ fn emit_haxe(d: &Decl, src: &str) -> String {
         for line in &p.doc {
             let _ = writeln!(out, "\t// {line}");
         }
-        let _ = writeln!(out, "\t@:hlNative(\"{}\", \"{}\")", d.library, p.name);
+        // Matches the resolver the library exports, which carries the
+        // library's name so that two of them cannot collide.
+        let _ = writeln!(
+            out,
+            "\t@:hlNative(\"{}\", \"{}_{}\")",
+            d.library, d.library, p.name
+        );
         let _ = writeln!(
             out,
             "\tpublic static function {}({args}) : {} {{",

@@ -1,0 +1,12 @@
+{
+  "name": "hlwgpu",
+  "url": "https://github.com/rayzor-blade/hlwgpu",
+  "license": "MIT",
+  "tags": ["gpu", "webgpu", "graphics", "hashlink", "wgpu"],
+  "description": "WebGPU for HashLink: buffers, textures, WGSL shaders, render and compute pipelines. Vulkan, Metal and D3D12 natively, WebGPU in a browser.",
+  "contributors": ["darmie"],
+  "version": "0.1.0",
+  "releasenote": "First release.",
+  "classPath": "",
+  "dependencies": {}
+}
