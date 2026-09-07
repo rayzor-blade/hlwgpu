@@ -272,6 +272,13 @@ class _Native {
 		return;
 	}
 
+	// How the stencil test behaves, for both faces. `fail`, `depth_fail` and
+	// `pass` are `wgpu.StencilOperation`; `compare` is a `wgpu.CompareFunction`.
+	@:hlNative("wgpu", "wgpu_pipeline_stencil")
+	public static function pipeline_stencil(builder : Int, compare : Int, fail : Int, depth_fail : Int, pass_op : Int, read_mask : Int, write_mask : Int) : Void {
+		return;
+	}
+
 	@:hlNative("wgpu", "wgpu_pipeline_depth")
 	public static function pipeline_depth(builder : Int, format : Int, write : Bool, compare : Int) : Void {
 		return;
@@ -308,8 +315,11 @@ class _Native {
 		return;
 	}
 
+	// `stencil_clear` below zero means the attachment has no stencil, which is
+	// what a depth-only format wants. A format that has one must say so, or wgpu
+	// refuses the pass.
 	@:hlNative("wgpu", "wgpu_pass_depth")
-	public static function pass_depth(encoder : Int, view : Int, clear : Float) : Void {
+	public static function pass_depth(encoder : Int, view : Int, clear : Float, stencil_clear : Int) : Void {
 		return;
 	}
 
@@ -458,6 +468,26 @@ class _Native {
 	// Takes the vertex count, instance count and first indices from a buffer
 	// rather than from here, so work the GPU produced can be drawn without
 	// reading it back first. Four `u32` at `offset`.
+	// What the stencil test compares against.
+	@:hlNative("wgpu", "wgpu_render_set_stencil_reference")
+	public static function render_set_stencil_reference(encoder : Int, reference : Int) : Void {
+		return;
+	}
+
+	// A compute dispatch whose workgroup counts come from a buffer. Three `u32`
+	// at `offset`.
+	@:hlNative("wgpu", "wgpu_encoder_compute_indirect")
+	public static function encoder_compute_indirect(encoder : Int, pipeline : Int, bindgroup : Int, buffer : Int, offset : Int) : Void {
+		return;
+	}
+
+	// What the shader compiler said, one message a line, or null if it said
+	// nothing. Where `device_take_error` says a shader was wrong, this says where.
+	@:hlNative("wgpu", "wgpu_shader_messages")
+	public static function shader_messages(shader : Int) : hl.Bytes {
+		return null;
+	}
+
 	@:hlNative("wgpu", "wgpu_render_draw_indirect")
 	public static function render_draw_indirect(encoder : Int, buffer : Int, offset : Int) : Void {
 		return;

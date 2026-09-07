@@ -54,6 +54,19 @@ fn main(@builtin(global_invocation_id) id : vec3<u32>) {
 		encoder.copyBuffer(work, 0, staging, 0, bytes);
 		encoder.submit(queue);
 
+		// The same kernel again, with its workgroup counts read from a buffer.
+		var counts = haxe.io.Bytes.alloc(12);
+		counts.setInt32(0, Std.int(COUNT / GROUP));
+		counts.setInt32(4, 1);
+		counts.setInt32(8, 1);
+		var howMany = device.buffer(12, Indirect | CopyDst);
+		queue.write(howMany, 0, counts);
+
+		var again = device.encoder();
+		again.computeIndirect(pipeline, bindings, howMany);
+		again.copyBuffer(work, 0, staging, 0, bytes);
+		again.submit(queue);
+
 		var out = staging.read(device, 0, bytes);
 		if (out == null) {
 			Sys.println("readback failed");
@@ -62,7 +75,8 @@ fn main(@builtin(global_invocation_id) id : vec3<u32>) {
 
 		var wrong = 0;
 		for (i in 0...COUNT) {
-			var expected = i * 2 + 1;
+			// Doubled twice: once directly, once from the buffer.
+			var expected = (i * 2 + 1) * 2 + 1;
 			var got = out.getInt32(i * 4);
 			if (got != expected) {
 				if (wrong < 3) {
@@ -72,8 +86,9 @@ fn main(@builtin(global_invocation_id) id : vec3<u32>) {
 			}
 		}
 
-		Sys.println(wrong == 0 ? 'compute: all $COUNT values exact' : 'compute: $wrong of $COUNT wrong');
+		Sys.println(wrong == 0 ? 'compute: all $COUNT values exact, dispatched directly then from a buffer' : 'compute: $wrong of $COUNT wrong');
 
+		howMany.destroy();
 		bindings.destroy();
 		pipeline.destroy();
 		shader.destroy();

@@ -22,6 +22,12 @@ abstract Encoder(Int) from Int to Int {
 		renderPass().colour(target, r, g, b, a).depth(depth).begin();
 	}
 
+	/** The same, for a format that carries a stencil as well. **/
+	public inline function beginRenderStencil(target : TextureView, depth : TextureView, r : Float, g : Float,
+			b : Float, a = 1.0) : Void {
+		renderPass().colour(target, r, g, b, a).depth(depth, 1.0, 0).begin();
+	}
+
 	/**
 		Describes a pass with more than one colour target, or with depth. See
 		`RenderPassBuilder`.
@@ -63,6 +69,17 @@ abstract Encoder(Int) from Int to Int {
 	}
 
 	/** The colour a `Constant` or `OneMinusConstant` blend factor means. **/
+	/** What the stencil test compares against. **/
+	public inline function setStencilReference(reference : Int) : Void {
+		_Native.render_set_stencil_reference(this, reference);
+	}
+
+	/** A dispatch whose workgroup counts come from a buffer. Three `UInt32`. **/
+	public inline function computeIndirect(pipeline : ComputePipeline, bindings : BindGroup, commands : Buffer,
+			offset = 0) : Void {
+		_Native.encoder_compute_indirect(this, pipeline, bindings, commands, offset);
+	}
+
 	public inline function setBlendConstant(r : Float, g : Float, b : Float, a = 1.0) : Void {
 		_Native.render_set_blend_constant(this, r, g, b, a);
 	}

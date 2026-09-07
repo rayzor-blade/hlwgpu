@@ -14,7 +14,7 @@ const GEN_MASK = (1 << GEN_BITS) - 1;
 
 // Texture formats, by index. Haxe's `wgpu.TextureFormat` and the match in
 // `imp.rs` are the same list in the same order.
-const FORMATS = ["rgba8unorm", "bgra8unorm", "rgba8unorm-srgb", "depth32float", "bgra8unorm-srgb"];
+const FORMATS = ["rgba8unorm", "bgra8unorm", "rgba8unorm-srgb", "depth32float", "bgra8unorm-srgb", "depth24plus-stencil8"];
 
 // Vertex attribute formats, likewise `wgpu.VertexFormat`.
 const VERTEX_FORMATS = ["float32x2", "float32x3", "float32x4", "uint32"];
@@ -305,13 +305,19 @@ export function makeHandles(rt) {
     describing(encoder).colour.push({ view, clearValue, loadOp: "clear", storeOp: "store" });
   }
 
-  function addDepth(encoder, view, clear) {
-    describing(encoder).depth = {
+  function addDepth(encoder, view, clear, stencilClear) {
+    const attachment = {
       view,
       depthClearValue: clear,
       depthLoadOp: "clear",
       depthStoreOp: "store",
     };
+    if (stencilClear >= 0) {
+      attachment.stencilClearValue = stencilClear;
+      attachment.stencilLoadOp = "clear";
+      attachment.stencilStoreOp = "store";
+    }
+    describing(encoder).depth = attachment;
   }
 
   function beginDescribedPass(encoder) {
@@ -326,6 +332,20 @@ export function makeHandles(rt) {
   // Whatever is recording: the pass while one is open, the encoder otherwise.
   function recording(encoder) {
     return passes.get(encoder) ?? get("encoder", encoder);
+  }
+
+  // The compiler's own messages, which say where. Available in a page only
+  // once the promise settles, so a caller asks after the shader is made and
+  // may get nothing the first time.
+  function compilationMessages(shader) {
+    const module = get("shader", shader);
+    const info = module.__hlwgpuCompilation;
+    if (!info) {
+      module.getCompilationInfo().then((i) => { module.__hlwgpuCompilation = i; });
+      return 0;
+    }
+    const lines = info.messages.map((m) => `line ${m.lineNum}: ${m.message}`);
+    return lines.length ? str(lines.join("\n")) : 0;
   }
 
   function formatName(which) {

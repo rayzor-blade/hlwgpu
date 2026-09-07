@@ -41,7 +41,7 @@ struct EncoderEntry {
     /// handles rather than views because the views have to outlive the
     /// descriptor, and that is easier to arrange when the pass opens.
     colour: Vec<(i32, wgpu::Color)>,
-    depth: Option<(i32, f64)>,
+    depth: Option<(i32, f64, i32)>,
 }
 
 type Encoder = Mutex<EncoderEntry>;
@@ -523,6 +523,7 @@ fn texture_format(which: i32) -> wgpu::TextureFormat {
         2 => wgpu::TextureFormat::Rgba8UnormSrgb,
         3 => wgpu::TextureFormat::Depth32Float,
         4 => wgpu::TextureFormat::Bgra8UnormSrgb,
+        5 => wgpu::TextureFormat::Depth24PlusStencil8,
         _ => wgpu::TextureFormat::Rgba8Unorm,
     }
 }
@@ -594,9 +595,9 @@ pub unsafe fn pass_colour(encoder: i32, view: i32, r: f64, g: f64, b: f64, a: f6
         .push((view, wgpu::Color { r, g, b, a }));
 }
 
-pub unsafe fn pass_depth(encoder: i32, view: i32, clear: f64) {
+pub unsafe fn pass_depth(encoder: i32, view: i32, clear: f64, stencil_clear: i32) {
     let entry = find!(ENCODERS, encoder);
-    entry.lock().unwrap().depth = Some((view, clear));
+    entry.lock().unwrap().depth = Some((view, clear, stencil_clear));
 }
 
 /// Opens what was described. Anything not attached by then is not in the pass.
@@ -613,8 +614,8 @@ pub unsafe fn pass_begin(encoder: i32) {
         }
     }
     let depth = match held.depth {
-        Some((handle, clear)) => match VIEWS.lock().unwrap().get(handle) {
-            Some(view) => Some((view, clear)),
+        Some((handle, clear, stencil)) => match VIEWS.lock().unwrap().get(handle) {
+            Some(view) => Some((view, clear, stencil)),
             None => return,
         },
         None => None,
@@ -641,14 +642,19 @@ pub unsafe fn pass_begin(encoder: i32) {
             .begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &attachments,
-                depth_stencil_attachment: depth.as_ref().map(|(view, clear)| {
+                depth_stencil_attachment: depth.as_ref().map(|(view, clear, stencil)| {
                     wgpu::RenderPassDepthStencilAttachment {
                         view,
                         depth_ops: Some(wgpu::Operations {
                             load: wgpu::LoadOp::Clear(*clear as f32),
                             store: wgpu::StoreOp::Store,
                         }),
-                        stencil_ops: None,
+                        // A depth-only format must not be given these, and
+                        // one with a stencil must be.
+                        stencil_ops: (*stencil >= 0).then_some(wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(*stencil as u32),
+                            store: wgpu::StoreOp::Store,
+                        }),
                     }
                 }),
                 timestamp_writes: None,
@@ -1124,6 +1130,7 @@ struct PipelineBuild {
     buffers: Vec<(u64, wgpu::VertexStepMode, Vec<wgpu::VertexAttribute>)>,
     targets: Vec<(wgpu::TextureFormat, wgpu::ColorWrites, Option<wgpu::BlendState>)>,
     depth: Option<(wgpu::TextureFormat, bool, wgpu::CompareFunction)>,
+    stencil: Option<wgpu::StencilState>,
     primitive: wgpu::PrimitiveState,
 }
 
@@ -1177,6 +1184,21 @@ fn compare_function(i: i32) -> wgpu::CompareFunction {
         6 => C::GreaterEqual,
         7 => C::Always,
         _ => C::Less,
+    }
+}
+
+/// The order the WebGPU IDL declares them in, like every other enum here.
+fn stencil_operation(i: i32) -> wgpu::StencilOperation {
+    use wgpu::StencilOperation as S;
+    match i {
+        1 => S::Zero,
+        2 => S::Replace,
+        3 => S::Invert,
+        4 => S::IncrementClamp,
+        5 => S::DecrementClamp,
+        6 => S::IncrementWrap,
+        7 => S::DecrementWrap,
+        _ => S::Keep,
     }
 }
 
@@ -1325,6 +1347,33 @@ pub unsafe fn pipeline_blend(
     });
 }
 
+pub unsafe fn pipeline_stencil(
+    builder: i32,
+    compare: i32,
+    fail: i32,
+    depth_fail: i32,
+    pass_op: i32,
+    read_mask: i32,
+    write_mask: i32,
+) {
+    building(builder, |build| {
+        // Both faces the same: a caller who needs them to differ is doing
+        // something this has no way to say yet.
+        let face = wgpu::StencilFaceState {
+            compare: compare_function(compare),
+            fail_op: stencil_operation(fail),
+            depth_fail_op: stencil_operation(depth_fail),
+            pass_op: stencil_operation(pass_op),
+        };
+        build.stencil = Some(wgpu::StencilState {
+            front: face,
+            back: face,
+            read_mask: read_mask as u32,
+            write_mask: write_mask as u32,
+        });
+    });
+}
+
 pub unsafe fn pipeline_depth(builder: i32, format: i32, write: bool, compare: i32) {
     building(builder, |build| {
         build.depth = Some((texture_format(format), write, compare_function(compare)));
@@ -1389,7 +1438,7 @@ pub unsafe fn render_pipeline_build(builder: i32) -> i32 {
             format,
             depth_write_enabled: Some(write),
             depth_compare: Some(compare),
-            stencil: Default::default(),
+            stencil: build.stencil.clone().unwrap_or_default(),
             bias: Default::default(),
         });
 
@@ -1495,4 +1544,58 @@ pub unsafe fn encoder_insert_debug_marker(encoder: i32, label: *mut vbyte) {
             }
         }
     }
+}
+
+// -- stencil, indirect compute, and what the shader compiler said -------------
+
+pub unsafe fn render_set_stencil_reference(encoder: i32, reference: i32) {
+    let entry = find!(ENCODERS, encoder);
+    let mut held = entry.lock().unwrap();
+    if let Some(pass) = held.pass.as_mut() {
+        pass.set_stencil_reference(reference.max(0) as u32);
+    }
+}
+
+pub unsafe fn encoder_compute_indirect(
+    encoder: i32,
+    pipeline: i32,
+    bindgroup: i32,
+    buffer: i32,
+    offset: i32,
+) {
+    let encoder = find!(ENCODERS, encoder);
+    let pipeline = find!(PIPELINES, pipeline);
+    let bind_group = find!(BINDGROUPS, bindgroup);
+    let buffer = find!(BUFFERS, buffer);
+    let mut held = encoder.lock().unwrap();
+    let Some(encoder) = held.encoder.as_mut() else { return };
+
+    let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+        label: None,
+        timestamp_writes: None,
+    });
+    pass.set_pipeline(&pipeline);
+    pass.set_bind_group(0, &*bind_group, &[]);
+    pass.dispatch_workgroups_indirect(&buffer, offset.max(0) as u64);
+}
+
+/// One message a line, as `line N: what`, or null if the compiler said nothing.
+///
+/// `device_take_error` says a shader was wrong; this says where.
+pub unsafe fn shader_messages(shader: i32) -> *mut vbyte {
+    let module = find!(SHADERS, shader, std::ptr::null_mut());
+    let info = pollster::block_on(module.get_compilation_info());
+    if info.messages.is_empty() {
+        return std::ptr::null_mut();
+    }
+    let text = info
+        .messages
+        .iter()
+        .map(|m| match &m.location {
+            Some(at) => format!("line {}: {}", at.line_number, m.message),
+            None => m.message.clone(),
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    ucs2_out(&text)
 }

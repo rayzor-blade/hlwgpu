@@ -7,9 +7,14 @@ abstract RenderPassTargets(Int) from Int to Int {
 		return this;
 	}
 
-	/** Somewhere to keep depth. Cleared to `clear`, 1.0 by default. **/
-	public inline function depth(target : TextureView, clear = 1.0) : RenderPassTargets {
-		_Native.pass_depth(this, target, clear);
+	/**
+		Somewhere to keep depth, and stencil if the format has one.
+
+		Leave `stencilClear` alone for a depth-only format. A format that has
+		a stencil must be given one, or the pass is refused.
+	**/
+	public inline function depth(target : TextureView, clear = 1.0, stencilClear = -1) : RenderPassTargets {
+		_Native.pass_depth(this, target, clear, stencilClear);
 		return this;
 	}
 

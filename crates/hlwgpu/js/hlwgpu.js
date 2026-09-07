@@ -26,6 +26,9 @@ const FRONT_FACE = ["ccw", "cw"];
 // VertexStepMode from the WebGPU IDL, indexed as the declaration numbers it.
 const VERTEX_STEP_MODE = ["vertex", "instance"];
 
+// StencilOperation from the WebGPU IDL, indexed as the declaration numbers it.
+const STENCIL_OPERATION = ["keep", "zero", "replace", "invert", "increment-clamp", "decrement-clamp", "increment-wrap", "decrement-wrap"];
+
 // Runtime support for the primitives: a table mapping integer handles to
 // JavaScript objects, in-flight requests the guest polls, UTF-16 string
 // allocation into the program's heap, and the canvas registry.
@@ -42,7 +45,7 @@ const GEN_MASK = (1 << GEN_BITS) - 1;
 
 // Texture formats, by index. Haxe's `wgpu.TextureFormat` and the match in
 // `imp.rs` are the same list in the same order.
-const FORMATS = ["rgba8unorm", "bgra8unorm", "rgba8unorm-srgb", "depth32float", "bgra8unorm-srgb"];
+const FORMATS = ["rgba8unorm", "bgra8unorm", "rgba8unorm-srgb", "depth32float", "bgra8unorm-srgb", "depth24plus-stencil8"];
 
 // Vertex attribute formats, likewise `wgpu.VertexFormat`.
 const VERTEX_FORMATS = ["float32x2", "float32x3", "float32x4", "uint32"];
@@ -333,13 +336,19 @@ export function makeHandles(rt) {
     describing(encoder).colour.push({ view, clearValue, loadOp: "clear", storeOp: "store" });
   }
 
-  function addDepth(encoder, view, clear) {
-    describing(encoder).depth = {
+  function addDepth(encoder, view, clear, stencilClear) {
+    const attachment = {
       view,
       depthClearValue: clear,
       depthLoadOp: "clear",
       depthStoreOp: "store",
     };
+    if (stencilClear >= 0) {
+      attachment.stencilClearValue = stencilClear;
+      attachment.stencilLoadOp = "clear";
+      attachment.stencilStoreOp = "store";
+    }
+    describing(encoder).depth = attachment;
   }
 
   function beginDescribedPass(encoder) {
@@ -354,6 +363,20 @@ export function makeHandles(rt) {
   // Whatever is recording: the pass while one is open, the encoder otherwise.
   function recording(encoder) {
     return passes.get(encoder) ?? get("encoder", encoder);
+  }
+
+  // The compiler's own messages, which say where. Available in a page only
+  // once the promise settles, so a caller asks after the shader is made and
+  // may get nothing the first time.
+  function compilationMessages(shader) {
+    const module = get("shader", shader);
+    const info = module.__hlwgpuCompilation;
+    if (!info) {
+      module.getCompilationInfo().then((i) => { module.__hlwgpuCompilation = i; });
+      return 0;
+    }
+    const lines = info.messages.map((m) => `line ${m.lineNum}: ${m.message}`);
+    return lines.length ? str(lines.join("\n")) : 0;
   }
 
   function formatName(which) {
@@ -502,6 +525,9 @@ export function hlwgpuImports(rt) {
     // Opens a colour target; a blend that follows belongs to it.
     hlwgpu_pipeline_target: (builder, format, write_mask) => { H.get("builder", builder).fragment.targets.push({ format: H.formatName(format), writeMask: write_mask }); },
     hlwgpu_pipeline_blend: (builder, src, dst, op, src_alpha, dst_alpha, op_alpha) => { const t = H.get("builder", builder).fragment.targets; t[t.length - 1].blend = { color: { srcFactor: BLEND_FACTOR[src], dstFactor: BLEND_FACTOR[dst], operation: BLEND_OPERATION[op] }, alpha: { srcFactor: BLEND_FACTOR[src_alpha], dstFactor: BLEND_FACTOR[dst_alpha], operation: BLEND_OPERATION[op_alpha] } }; },
+    // How the stencil test behaves, for both faces. `fail`, `depth_fail` and
+    // `pass` are `wgpu.StencilOperation`; `compare` is a `wgpu.CompareFunction`.
+    hlwgpu_pipeline_stencil: (builder, compare, fail, depth_fail, pass_op, read_mask, write_mask) => { const s = H.get("builder", builder); const face = { compare: COMPARE_FUNCTION[compare], failOp: STENCIL_OPERATION[fail], depthFailOp: STENCIL_OPERATION[depth_fail], passOp: STENCIL_OPERATION[pass_op] }; s.stencil = { front: face, back: face, readMask: read_mask, writeMask: write_mask }; },
     hlwgpu_pipeline_depth: (builder, format, write, compare) => { H.get("builder", builder).depthStencil = { format: H.formatName(format), depthWriteEnabled: !!write, depthCompare: COMPARE_FUNCTION[compare] }; },
     hlwgpu_pipeline_primitive: (builder, topology, cull, front) => { const p = H.get("builder", builder).primitive; p.topology = PRIMITIVE_TOPOLOGY[topology]; p.cullMode = CULL_MODE[cull]; p.frontFace = FRONT_FACE[front]; },
     // Builds the pipeline and spends the builder.
@@ -514,7 +540,10 @@ export function hlwgpuImports(rt) {
     // Adds a colour target and what to clear it to. Their order is the order the
     // fragment shader's `@location`s are numbered in.
     hlwgpu_pass_colour: (encoder, view, r, g, b, a) => { H.addColour(encoder, H.get("view", view), { r, g, b, a }); },
-    hlwgpu_pass_depth: (encoder, view, clear) => { H.addDepth(encoder, H.get("view", view), clear); },
+    // `stencil_clear` below zero means the attachment has no stencil, which is
+    // what a depth-only format wants. A format that has one must say so, or wgpu
+    // refuses the pass.
+    hlwgpu_pass_depth: (encoder, view, clear, stencil_clear) => { H.addDepth(encoder, H.get("view", view), clear, stencil_clear); },
     hlwgpu_pass_begin: (encoder) => { H.beginDescribedPass(encoder); },
     hlwgpu_render_set_pipeline: (encoder, pipeline) => { H.pass(encoder).setPipeline(H.get("renderpipeline", pipeline)); },
     hlwgpu_render_set_vertex_buffer: (encoder, slot, buffer) => { H.pass(encoder).setVertexBuffer(slot, H.get("buffer", buffer)); },
@@ -564,6 +593,14 @@ export function hlwgpuImports(rt) {
     // Takes the vertex count, instance count and first indices from a buffer
     // rather than from here, so work the GPU produced can be drawn without
     // reading it back first. Four `u32` at `offset`.
+    // What the stencil test compares against.
+    hlwgpu_render_set_stencil_reference: (encoder, reference) => { H.pass(encoder).setStencilReference(reference); },
+    // A compute dispatch whose workgroup counts come from a buffer. Three `u32`
+    // at `offset`.
+    hlwgpu_encoder_compute_indirect: (encoder, pipeline, bindgroup, buffer, offset) => { const p = H.get("encoder", encoder).beginComputePass(); p.setPipeline(H.get("pipeline", pipeline)); p.setBindGroup(0, H.get("bindgroup", bindgroup)); p.dispatchWorkgroupsIndirect(H.get("buffer", buffer), offset); p.end(); },
+    // What the shader compiler said, one message a line, or null if it said
+    // nothing. Where `device_take_error` says a shader was wrong, this says where.
+    hlwgpu_shader_messages: (shader) => H.compilationMessages(shader),
     hlwgpu_render_draw_indirect: (encoder, buffer, offset) => { H.pass(encoder).drawIndirect(H.get("buffer", buffer), offset); },
     // The same for indexed drawing. Five `u32` at `offset`.
     hlwgpu_render_draw_indexed_indirect: (encoder, buffer, offset) => { H.pass(encoder).drawIndexedIndirect(H.get("buffer", buffer), offset); },

@@ -56,13 +56,14 @@ NUL-terminated UTF-16 allocated through the program's `hlp_alloc_bytes`.
 | `hlwgpu_pipeline_attribute` | `builder: i32`, `format: i32`, `offset: i32`, `location: i32` | `void` |
 | `hlwgpu_pipeline_target` | `builder: i32`, `format: i32`, `write_mask: i32` | `void` |
 | `hlwgpu_pipeline_blend` | `builder: i32`, `src: i32`, `dst: i32`, `op: i32`, `src_alpha: i32`, `dst_alpha: i32`, `op_alpha: i32` | `void` |
+| `hlwgpu_pipeline_stencil` | `builder: i32`, `compare: i32`, `fail: i32`, `depth_fail: i32`, `pass_op: i32`, `read_mask: i32`, `write_mask: i32` | `void` |
 | `hlwgpu_pipeline_depth` | `builder: i32`, `format: i32`, `write: i32`, `compare: i32` | `void` |
 | `hlwgpu_pipeline_primitive` | `builder: i32`, `topology: i32`, `cull: i32`, `front: i32` | `void` |
 | `hlwgpu_render_pipeline_build` | `builder: i32` | `i32` |
 | `hlwgpu_render_pipeline_destroy` | `pipeline: i32` | `void` |
 | `hlwgpu_pass_reset` | `encoder: i32` | `void` |
 | `hlwgpu_pass_colour` | `encoder: i32`, `view: i32`, `r: f64`, `g: f64`, `b: f64`, `a: f64` | `void` |
-| `hlwgpu_pass_depth` | `encoder: i32`, `view: i32`, `clear: f64` | `void` |
+| `hlwgpu_pass_depth` | `encoder: i32`, `view: i32`, `clear: f64`, `stencil_clear: i32` | `void` |
 | `hlwgpu_pass_begin` | `encoder: i32` | `void` |
 | `hlwgpu_render_set_pipeline` | `encoder: i32`, `pipeline: i32` | `void` |
 | `hlwgpu_render_set_vertex_buffer` | `encoder: i32`, `slot: i32`, `buffer: i32` | `void` |
@@ -87,6 +88,9 @@ NUL-terminated UTF-16 allocated through the program's `hlp_alloc_bytes`.
 | `hlwgpu_surface_present` | `queue: i32`, `surface: i32` | `void` |
 | `hlwgpu_surface_destroy` | `surface: i32` | `void` |
 | `hlwgpu_render_set_blend_constant` | `encoder: i32`, `r: f64`, `g: f64`, `b: f64`, `a: f64` | `void` |
+| `hlwgpu_render_set_stencil_reference` | `encoder: i32`, `reference: i32` | `void` |
+| `hlwgpu_encoder_compute_indirect` | `encoder: i32`, `pipeline: i32`, `bindgroup: i32`, `buffer: i32`, `offset: i32` | `void` |
+| `hlwgpu_shader_messages` | `shader: i32` | `i32` |
 | `hlwgpu_render_draw_indirect` | `encoder: i32`, `buffer: i32`, `offset: i32` | `void` |
 | `hlwgpu_render_draw_indexed_indirect` | `encoder: i32`, `buffer: i32`, `offset: i32` | `void` |
 | `hlwgpu_encoder_push_debug_group` | `encoder: i32`, `label: i32` | `void` |

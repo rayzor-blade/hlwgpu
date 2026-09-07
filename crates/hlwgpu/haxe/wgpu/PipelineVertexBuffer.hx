@@ -37,6 +37,14 @@ abstract PipelineVertexBuffer(Int) from Int to Int {
 		return this;
 	}
 
+	/** How the stencil test behaves, for both faces. **/
+	public inline function stencil(compare : CompareFunction, fail : StencilOperation = Keep,
+			depthFail : StencilOperation = Keep, pass : StencilOperation = Keep, readMask = 0xFF,
+			writeMask = 0xFF) : PipelineVertexBuffer {
+		_Native.pipeline_stencil(this, compare, fail, depthFail, pass, readMask, writeMask);
+		return this;
+	}
+
 	public inline function primitive(topology : PrimitiveTopology = TriangleList, cull : CullMode = None,
 			front : FrontFace = Ccw) : PipelineVertexBuffer {
 		_Native.pipeline_primitive(this, topology, cull, front);

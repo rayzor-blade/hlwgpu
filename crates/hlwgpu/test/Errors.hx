@@ -21,7 +21,14 @@ class Errors {
 			failed++;
 		}
 
-		device.shader("@vertex fn nonsense( this is not a shader");
+		var broken = device.shader("@vertex fn nonsense( this is not a shader");
+		var where = broken.messages();
+		if (where == null || where.indexOf("line") < 0) {
+			Sys.println("  the compiler did not say where: " + where);
+			failed++;
+		} else {
+			Sys.println("  compiler: " + where.split("\n")[0]);
+		}
 		var message = device.takeError();
 		if (message == null || message.length == 0) {
 			Sys.println("  a broken shader reported nothing");

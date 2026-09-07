@@ -30,6 +30,7 @@ enum GPUPrimitiveTopology PrimitiveTopology
 enum GPUCullMode CullMode
 enum GPUFrontFace FrontFace
 enum GPUVertexStepMode VertexStepMode
+enum GPUStencilOperation StencilOperation
 
 # The kinds of object a handle can name, numbered in this order from 1. The
 # number is carried in the handle so that a buffer used where a texture
@@ -232,6 +233,11 @@ prim pipeline_target(builder: i32, format: i32, write_mask: i32) -> void
 prim pipeline_blend(builder: i32, src: i32, dst: i32, op: i32, src_alpha: i32, dst_alpha: i32, op_alpha: i32) -> void
   js const t = H.get("builder", builder).fragment.targets; t[t.length - 1].blend = { color: { srcFactor: BLEND_FACTOR[src], dstFactor: BLEND_FACTOR[dst], operation: BLEND_OPERATION[op] }, alpha: { srcFactor: BLEND_FACTOR[src_alpha], dstFactor: BLEND_FACTOR[dst_alpha], operation: BLEND_OPERATION[op_alpha] } }
 
+# How the stencil test behaves, for both faces. `fail`, `depth_fail` and
+# `pass` are `wgpu.StencilOperation`; `compare` is a `wgpu.CompareFunction`.
+prim pipeline_stencil(builder: i32, compare: i32, fail: i32, depth_fail: i32, pass_op: i32, read_mask: i32, write_mask: i32) -> void
+  js const s = H.get("builder", builder); const face = { compare: COMPARE_FUNCTION[compare], failOp: STENCIL_OPERATION[fail], depthFailOp: STENCIL_OPERATION[depth_fail], passOp: STENCIL_OPERATION[pass_op] }; s.stencil = { front: face, back: face, readMask: read_mask, writeMask: write_mask }
+
 prim pipeline_depth(builder: i32, format: i32, write: bool, compare: i32) -> void
   js H.get("builder", builder).depthStencil = { format: H.formatName(format), depthWriteEnabled: !!write, depthCompare: COMPARE_FUNCTION[compare] }
 
@@ -258,8 +264,11 @@ prim pass_reset(encoder: i32) -> void
 prim pass_colour(encoder: i32, view: i32, r: f64, g: f64, b: f64, a: f64) -> void
   js H.addColour(encoder, H.get("view", view), { r, g, b, a })
 
-prim pass_depth(encoder: i32, view: i32, clear: f64) -> void
-  js H.addDepth(encoder, H.get("view", view), clear)
+# `stencil_clear` below zero means the attachment has no stencil, which is
+# what a depth-only format wants. A format that has one must say so, or wgpu
+# refuses the pass.
+prim pass_depth(encoder: i32, view: i32, clear: f64, stencil_clear: i32) -> void
+  js H.addDepth(encoder, H.get("view", view), clear, stencil_clear)
 
 prim pass_begin(encoder: i32) -> void
   js H.beginDescribedPass(encoder)
@@ -368,6 +377,20 @@ prim render_set_blend_constant(encoder: i32, r: f64, g: f64, b: f64, a: f64) -> 
 # Takes the vertex count, instance count and first indices from a buffer
 # rather than from here, so work the GPU produced can be drawn without
 # reading it back first. Four `u32` at `offset`.
+# What the stencil test compares against.
+prim render_set_stencil_reference(encoder: i32, reference: i32) -> void
+  js H.pass(encoder).setStencilReference(reference)
+
+# A compute dispatch whose workgroup counts come from a buffer. Three `u32`
+# at `offset`.
+prim encoder_compute_indirect(encoder: i32, pipeline: i32, bindgroup: i32, buffer: i32, offset: i32) -> void
+  js const p = H.get("encoder", encoder).beginComputePass(); p.setPipeline(H.get("pipeline", pipeline)); p.setBindGroup(0, H.get("bindgroup", bindgroup)); p.dispatchWorkgroupsIndirect(H.get("buffer", buffer), offset); p.end()
+
+# What the shader compiler said, one message a line, or null if it said
+# nothing. Where `device_take_error` says a shader was wrong, this says where.
+prim shader_messages(shader: i32) -> bytes
+  js H.compilationMessages(shader)
+
 prim render_draw_indirect(encoder: i32, buffer: i32, offset: i32) -> void
   js H.pass(encoder).drawIndirect(H.get("buffer", buffer), offset)
 
