@@ -1,133 +1,111 @@
-# Why hlwgpu is built this way
+# Design notes
 
-This explains the decisions. For how to use the library, read the README and
-`docs/using.md`.
+Why hlwgpu is built the way it is. For usage, see the README and
+`docs/using.md`. For status, see `docs/backlog.md`.
 
-## WebGPU is the API
+## Why WebGPU
 
-**We expose WebGPU rather than inventing an API.**
+hlwgpu exposes WebGPU rather than a custom API.
 
-Modern GPU programming means Vulkan, D3D12, Metal, or something that abstracts
-all three. WebGPU is the only one of those with a browser implementation, and
-HashLink is going to wasm via ash.
+WebGPU is the only modern GPU API with a browser implementation, and HashLink
+targets wasm. `wgpu` is its Rust implementation and resolves to Vulkan, Metal
+and D3D12 underneath, so one dependency covers every native platform.
 
-`wgpu` is its Rust implementation. It already resolves to Vulkan, Metal and
-D3D12 underneath. Firefox, Servo and Deno ship it.
+## Native and wasm
 
-So one Haxe program runs on a desktop and in a webpage, with one API and one set
-of shaders.
+`wgpu.hdll` contains the implementation. `wgpu.wasm` contains none.
 
-## The implementation is native; wasm only forwards
+A `wasm32-wasip1` module cannot reach a GPU or call JavaScript, so on wasm the
+primitives call out to the host:
 
-**`wgpu.hdll` is the whole library. `wgpu.wasm` is empty.**
-
-A `wasm32-wasip1` module has no GPU and no JavaScript. There is no version of
-this library that reaches a device from inside one.
-
-| where | what runs the GPU |
+| target | what runs the GPU |
 |---|---|
-| native | `wgpu.hdll`, which holds the implementation |
-| a page | `js/hlwgpu.js`, over `navigator.gpu` |
-| another host | whatever implements `IMPORTS.md` |
+| native | `wgpu.hdll` |
+| browser | `js/hlwgpu.js`, over `navigator.gpu` |
+| other host | whatever implements `IMPORTS.md` |
 
-On wasm the primitives call out and the host does the work. Everywhere else
-the library does it itself.
+## Generated bindings
 
-## One declaration, every side generated
+`wgpu.api` is the only place a primitive is declared.
 
-**`wgpu.api` is the only place a primitive is written down.**
-
-The same primitive has to exist in several files at once, and they have to
-agree on its name and every argument. Nothing checks that agreement, so a
-mismatch is silent.
-
-This one line:
+The same primitive must exist in five files that agree on its name and
+arguments. Nothing checks that agreement at build time, so a mismatch fails at
+run time or not at all. This line:
 
 ```
 prim buffer_create(device: i32, size: i32, usage: i32) -> i32
 ```
 
-produces all of these:
+generates:
 
-| file | what it gets |
+| file | contents |
 |---|---|
 | `haxe/wgpu/_Native.hx` | the extern a Haxe program calls |
-| `src/native.rs` | the `hlp_wgpu_buffer_create` a VM looks up |
-| `src/wasm.rs` | the same export, calling out to a host instead |
-| `js/hlwgpu.js` | what a page runs |
-| `IMPORTS.md` | the entry another host has to provide |
+| `src/native.rs` | `hlp_wgpu_buffer_create`, which a VM looks up |
+| `src/wasm.rs` | the same export, calling out to a host |
+| `js/hlwgpu.js` | the browser implementation |
+| `IMPORTS.md` | the entry another host must provide |
 
-`build.rs` writes all five. Enumerations come from the vendored WebGPU IDL, so
-their values and order are the spec's.
+`build.rs` writes all five. Enum values come from the vendored WebGPU IDL.
+Only `imp.rs` and the `js` line of each declaration are hand-written.
 
-Only the Rust body in `imp.rs` and the `js` line of the declaration are
-written by hand.
+## Handles
 
-## Handles are integers
+Every GPU object crosses the boundary as an `i32`.
 
-**Every GPU object crosses as an `i32`, not a pointer.**
+A pointer would not work on wasm, where the object lives in the host's address
+space. The integer packs a kind, a generation and a slot index:
 
-A pointer cannot cross to a host. On wasm the object lives in the host's
-address space, so an integer is the only thing that means the same on both
-sides.
+- a destroyed handle fails its generation check and raises
+- a buffer passed where a texture is expected fails its kind check
 
-The integer packs a kind, a generation and a slot index. A destroyed handle
-fails its generation check and raises. A buffer passed where a texture belongs
-fails its kind check.
+`abstract Buffer(Int)` restores type safety in Haxe and compiles to a bare
+`Int`.
 
-`abstract Buffer(Int)` gives Haxe the type safety back and compiles to a bare
-`Int`, so this costs nothing.
+## Resource lifetime
 
-## Nothing is freed for you
+Callers must call `destroy()`. Nothing frees resources automatically.
 
-**Everything with a `destroy()` needs one.**
+ash runs no finalizers. Upstream HashLink does, so relying on them would give
+different behaviour on the two VMs.
 
-ash runs no finalizers. Upstream HashLink does, so a library that leaned on
-them would behave differently on the two VMs.
+`destroy()` is idempotent. It bumps the slot's generation, so a stale handle
+raises instead of reaching whatever occupies the slot next.
 
-Destroying twice is safe, so a caller can be defensive. The handle's
-generation is bumped, and anything still holding the old one raises rather
-than reaching whatever took the slot.
+## GC pointers
 
-Explicit destruction is the model, not a gap to fill in later.
+Rust holds integer tickets. Haxe holds the closures.
 
-## No GC pointer lives in Rust
+The collector does not scan the malloc heap, so a GC pointer stored only in a
+Rust `Vec` is unrooted and will be collected. Asynchronous callbacks are the
+obvious place this would happen, so Haxe stores them and passes an `i32`
+instead.
 
-**Rust stores integer tickets. Haxe stores the closures.**
+## Blocking
 
-The collector does not scan the malloc heap. A pointer whose only holder is a
-Rust `Vec` is unrooted, and the next collection takes it.
+No primitive blocks or suspends.
 
-Asynchronous work is where a callback would be stashed. Instead Haxe keeps it
-where the collector can see it, and passes an `i32`.
+A promise in a browser settles only after the current task returns, so a
+blocking primitive would deadlock. Suspending inside one requires engine
+support, which would restrict the browsers hlwgpu runs on.
 
-The library holds no GC pointer, so there is nothing to root.
-
-## No primitive blocks
-
-**Work that takes time returns a `Request`.**
-
-In a page nothing can block. A promise settles only when the task returns.
-Suspending inside a primitive would also need the engine's help, which pins
-the browsers we support.
-
-So a primitive starts the work and returns. `Request.await()` loops in Haxe,
-yielding between checks.
+Primitives start work and return a `Request`. `Request.await()` polls in Haxe
+and yields between checks:
 
 ```haxe
 var data = buffer.read(device, 0, 1024);
 ```
 
-That line blocks the calling Haxe thread on both targets, and no primitive
-blocked to do it.
+This blocks the calling Haxe thread, but no primitive blocked.
 
-## Descriptors are built by typed calls
+## Descriptors
 
-**A run of calls, never a packed blob.**
+Descriptors are built by a sequence of typed calls, not passed as a packed
+buffer.
 
-A blob is untyped at both ends. A layout mistake is a silent misread rather
-than a compile error, and it needs a decoder in Rust and another in
-JavaScript that must agree.
+A packed buffer is untyped at both ends. A layout mistake would be a silent
+misread rather than a compile error, and it would require a decoder in Rust
+and another in JavaScript.
 
 ```haxe
 device.pipeline()
@@ -137,99 +115,83 @@ device.pipeline()
     .build();
 ```
 
-Each call is one primitive taking scalars. The builder's type changes as it
-fills in, so `attribute` needs an open vertex buffer and `build` needs a
-target. `test/constraints.sh` proves the compiler refuses the rest.
+Each call is one primitive taking scalar arguments. The builder's type changes
+as it is filled in, so `attribute` requires an open vertex buffer and `build`
+requires a colour target. `test/constraints.sh` compiles invalid chains to
+check they are rejected.
 
-The crossings cost nothing, because pipelines are built at load and not per
-frame.
+The extra boundary crossings do not matter: pipelines are built at load time.
 
-Data still crosses as bytes: buffer contents, pixels, an array of handles.
-Structure does not.
+Bulk data still crosses as bytes — buffer contents, pixels, arrays of handles.
+Structured data does not.
 
-## WGSL only
+## Shaders
 
-**The library takes WGSL and nothing else.**
+hlwgpu accepts WGSL only.
 
-WGSL is the only shading language a browser accepts. Natively `wgpu` would
-also take SPIR-V and GLSL.
+WGSL is the only shading language browsers accept. `wgpu` also accepts SPIR-V
+and GLSL natively, but exposing those would give the native build capabilities
+the browser build lacks.
 
-Exposing those would give the native build a capability the browser build
-lacks.
+No primitive may work on one target and not another. `surface_unconfigure` was
+removed for this reason: it has no wgpu equivalent.
 
-No primitive may work on one target and not another. That rule is why
-`surface_unconfigure` was removed after it turned out to have no native
-counterpart.
+## Surfaces
 
-## Surfaces are supplied, not created
+hlwgpu does not create windows.
 
-**hlwgpu does not open windows.**
-
-Owning a window natively means owning an event loop. In a page the canvas
-belongs to the embedder.
-
-`wgpu.WindowSource` is a structural Haxe type. Anything reporting a platform
-code and four handle fields satisfies it. `crates/hlwindow` happens to, and
-neither crate names the other.
-
-A surface comes from outside, which keeps this library about drawing.
+Creating one natively means owning an event loop; in a browser the canvas
+belongs to the page. Instead, `wgpu.WindowSource` is a structural Haxe type
+that any window provider can satisfy by reporting a platform code and four
+handle fields. `crates/hlwindow` does, and neither crate references the other.
 
 ## Testing
 
-**Every test asserts exact bytes.**
+Tests assert exact byte values rather than comparing within a tolerance.
 
-Integer compute is bit-reproducible. Colours of 0 or 1 per channel survive the
-unorm conversion unchanged. So there is no tolerance to tune and no golden
-image to eyeball.
+Integer compute is bit-reproducible across GPUs. Colour channels of 0 or 1
+survive unorm conversion unchanged. CI runs the tests under ash and under
+upstream HashLink on lavapipe, so identical results come from both Metal and a
+software rasteriser.
 
-CI runs them under ash and under upstream HashLink on lavapipe. Identical
-pixels from Metal and a software rasteriser is the evidence that they are
-vendor-independent.
+Tests are written so they cannot pass without the feature under test. The
+depth test draws the far object last; the stencil test draws over the whole
+target and is masked to a region.
 
-A test that could pass without the feature is worth nothing. The depth test
-draws the far thing last. The stencil test paints only where a mark is.
+## Changes this required in ash
 
-## What building this found in ash
+**Native dispatch.** ash's interpreter called natives through a hand-written
+table of signatures, and an unlisted combination was a runtime error. Three
+were added by hand in one afternoon before the table was generated instead.
+It now lives in ash's `ash_native_call` crate.
 
-**A library is a good way to find the parts of a VM nobody has needed.**
+**Symbol naming.** `wgpu.hdll` originally imported `hlp_alloc_bytes`, which is
+ash-specific. Upstream HashLink exports `hl_alloc_bytes`. Every test ran under
+ash, so the portability claim was untested. CI now builds upstream HashLink,
+and the library imports one symbol.
 
-The interpreter called natives through a hand-written table of signatures. A
-combination nobody had used was a clean error, but still a wall. It grew three
-arms in one afternoon once colours and viewports started crossing.
+## Failed lookups
 
-It is generated now, in ash's `ash_native_call`.
+A lookup that cannot resolve returns a value that is not valid, not a default.
 
-`wgpu.hdll` also asked for `hlp_alloc_bytes`, which is ash's spelling. Upstream
-HashLink exports `hl_alloc_bytes`. Every test used ash, so the claim that it
-loads in any HashLink was untested exactly where it was wrong.
+`surface_preferred_format` returned 0 for unrecognised formats. 0 is
+`Rgba8Unorm`, a real format. A surface requiring `Bgra8UnormSrgb` therefore
+got a valid-looking wrong answer, and `configure` failed two calls later with
+an error identifying neither the cause nor the caller. The visible symptom was
+a blank window.
 
-CI builds upstream HashLink now, and the library asks for one symbol.
+It returns -1 now.
 
-## A miss must not look like an answer
+## Out of scope
 
-**A lookup that fails should say so, not return something plausible.**
+- **SDL**, in any form.
+- **Hand-written JavaScript**, apart from a prelude containing no
+  primitive-specific code.
+- **Any dependency on ash.** The native library must load in stock HashLink,
+  and the browser half must work in a page that does not know about ash.
+- **A renderer, scene graph or material system.**
+- **GL or WebGL.**
 
-`surface_preferred_format` returned 0 for a format it could not name. 0 is
-`Rgba8Unorm`, a real format.
+## Status
 
-The first surface it met wanted `Bgra8UnormSrgb`. It answered "Rgba8Unorm"
-with confidence, and `configure` panicked two calls later with an error naming
-neither the cause nor the caller. On screen it was a blank white window.
-
-It returns -1 now, which is not a format. Any lookup added here should fail
-loudly rather than plausibly.
-
-## What is deliberately absent
-
-- **SDL.** Not a dependency, not a surface source, not a fallback.
-- **Hand-written JavaScript**, beyond a prelude that knows no primitives.
-- **Any dependency on ash.** The native library loads in stock HashLink. The
-  browser half works in a page that has never heard of us.
-- **A renderer, scene graph or material system.** This is the layer under
-  those.
-- **GL or WebGL.** The point of WebGPU is not writing that translation.
-
-## Where it has got to
-
-`docs/backlog.md` has what is done, what is next and what is deliberately not
-being done.
+See `docs/backlog.md`.
