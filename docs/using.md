@@ -18,7 +18,7 @@ people out:
 `crates/hlwgpu/test/Conventions.hx` checks both, because a symmetric test
 cannot.
 
-## Destroying things
+## House keeping
 
 Call `destroy()` on anything that has it. Buffers, textures and pipelines are
 not freed when they go out of scope, so anything you do not destroy holds its
