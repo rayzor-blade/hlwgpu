@@ -120,7 +120,11 @@ unsafe fn ucs2_in(bytes: *const vbyte) -> String {
 // -- instance ---------------------------------------------------------------
 
 pub unsafe fn instance_create() -> i32 {
-    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
+    // `with_env` honours WGPU_BACKEND and the rest, so a program built with
+    // more than one backend can be told which to use without an API for it.
+    let instance = wgpu::Instance::new(
+        wgpu::InstanceDescriptor::new_without_display_handle().with_env(),
+    );
     INSTANCES.lock().unwrap().put(instance)
 }
 
@@ -980,8 +984,11 @@ unsafe fn raw_handles(
             )
         }
         3 => {
-            let mut window = rwh::XlibWindowHandle::new(wa as u64);
-            window.visual_id = wb as u64;
+            // An Xlib id is a `c_ulong`, which is 64 bits on Unix and 32 on
+            // Windows. Writing `u64` compiles on the platform this branch is
+            // for and nowhere else.
+            let mut window = rwh::XlibWindowHandle::new(wa as std::os::raw::c_ulong);
+            window.visual_id = wb as std::os::raw::c_ulong;
             (
                 rwh::RawDisplayHandle::Xlib(rwh::XlibDisplayHandle::new(
                     NonNull::new(da as *mut c_void),

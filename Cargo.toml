@@ -8,6 +8,14 @@ members = ["crates/*"]
 hl_abi = { git = "https://github.com/rayzor-blade/hl_abi" }
 hl_native_gen = { path = "crates/hl_native_gen" }
 
+# A released hdll is loaded by a VM and never debugged through, so the symbol
+# table is dead weight; whole-program optimisation across one codegen unit is
+# worth the build time for something built once per release.
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+
 # One large generated match. Optimising it costs far more than running it ever
 # saves, since either way it only makes a call into native code.
 [profile.dev.package.hl_native_gen]

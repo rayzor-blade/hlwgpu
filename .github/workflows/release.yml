@@ -27,6 +27,9 @@ jobs:
           - { os: ubuntu-24.04,     name: linux-x64,    built: lib,  ext: so }
           - { os: ubuntu-24.04-arm, name: linux-arm64,  built: lib,  ext: so }
           - { os: windows-2022,     name: windows-x64,  built: "",   ext: dll }
+          # D3D12 is what Windows takes by default. This one carries Vulkan
+          # as well, chosen with WGPU_BACKEND=vulkan.
+          - { os: windows-2022,     name: windows-x64-vulkan, built: "", ext: dll, features: vulkan }
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -61,7 +64,9 @@ jobs:
           echo "HL_LIB_DIR=$libdir" >> "$GITHUB_ENV"
 
       - name: Build
-        run: cargo build --release -p hlwgpu -p hlwindow
+        run: |
+          cargo build --release -p hlwgpu -p hlwindow \
+            ${{ matrix.features && format('--features {0}', matrix.features) || '' }}
 
       - name: Name them as HashLink expects
         shell: bash
@@ -69,6 +74,64 @@ jobs:
           mkdir -p out
           cp "target/release/${{ matrix.built }}hlwgpu.${{ matrix.ext }}" out/wgpu.hdll
           cp "target/release/${{ matrix.built }}hlwindow.${{ matrix.ext }}" out/window.hdll
+          cp LICENSE README.md out/
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hlwgpu-${{ matrix.name }}
+          path: out/
+
+  mobile:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest,  name: ios-arm64,     target: aarch64-apple-ios }
+          - { os: macos-latest,  name: ios-simulator, target: aarch64-apple-ios-sim }
+          - { os: ubuntu-24.04,  name: android-arm64, target: aarch64-linux-android }
+          - { os: ubuntu-24.04,  name: android-arm,   target: armv7-linux-androideabi }
+          - { os: ubuntu-24.04,  name: android-x64,   target: x86_64-linux-android }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release-${{ matrix.name }}
+
+      - uses: nttld/setup-ndk@v1
+        if: startsWith(matrix.name, 'android')
+        with:
+          ndk-version: r27
+
+      - name: Install cargo-ndk
+        if: startsWith(matrix.name, 'android')
+        run: cargo install cargo-ndk --locked
+
+      # A mobile app links HashLink and its libraries statically, so what
+      # ships here is the archive rather than a loadable hdll. It is large
+      # because an archive holds every object file; the app's linker keeps
+      # only what it reaches.
+      - name: Build
+        run: |
+          if [ "${{ startsWith(matrix.name, 'android') }}" = "true" ]; then
+            cargo ndk -t ${{ matrix.target }} build --release -p hlwgpu
+          else
+            cargo build --release -p hlwgpu --target ${{ matrix.target }}
+          fi
+        shell: bash
+
+      - name: Collect
+        shell: bash
+        run: |
+          mkdir -p out
+          cp "target/${{ matrix.target }}/release/libhlwgpu.a" out/
           cp LICENSE README.md out/
           ls -la out
 
@@ -134,7 +197,7 @@ jobs:
 
   publish:
     name: publish
-    needs: [native, wasm, haxe]
+    needs: [native, mobile, wasm, haxe]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04
     permissions:

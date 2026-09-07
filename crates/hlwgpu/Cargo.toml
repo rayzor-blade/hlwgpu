@@ -17,13 +17,41 @@ default = ["native"]
 # The implementation. Off for the wasm side module, which holds none: a
 # wasip1 module has no GPU, so the primitives forward and a host answers.
 native = ["dep:wgpu", "dep:pollster", "dep:raw-window-handle"]
+# Adds Vulkan to a build that would not have it. Windows takes D3D12 by
+# default; this is for the separate build that can also use Vulkan, chosen at
+# run time with WGPU_BACKEND=vulkan.
+vulkan = ["wgpu/vulkan"]
 
 [build-dependencies]
 hl_native_gen = { workspace = true }
 
+# One backend each, the one the platform actually uses. wgpu will compile
+# every backend it is given and only some are gated out by target, so leaving
+# the defaults on builds Vulkan into a macOS library that will never call it.
+# No `gles`: this library does not offer OpenGL. No `webgpu`: that is for a
+# wasm32-unknown-unknown build, and ours is wasip1.
+[target.'cfg(target_vendor = "apple")'.dependencies]
+wgpu = { version = "30", optional = true, default-features = false, features = [
+  "std", "parking_lot", "wgsl", "metal",
+] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+wgpu = { version = "30", optional = true, default-features = false, features = [
+  "std", "parking_lot", "wgsl", "dx12",
+] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+wgpu = { version = "30", optional = true, default-features = false, features = [
+  "std", "parking_lot", "wgsl", "vulkan", "gles",
+] }
+
+[target.'cfg(all(unix, not(target_vendor = "apple"), not(target_os = "android")))'.dependencies]
+wgpu = { version = "30", optional = true, default-features = false, features = [
+  "std", "parking_lot", "wgsl", "vulkan",
+] }
+
 [dependencies]
 hl_abi = { workspace = true }
-wgpu = { version = "30", optional = true }
 # Must resolve to the same version wgpu uses, or the handles are not its.
 raw-window-handle = { version = "0.6", optional = true }
 # Adapter enumeration is a future that is already resolved on every native
