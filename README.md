@@ -20,8 +20,6 @@ Each platform gets the backend it actually uses, through
 | Android | Vulkan, falling back to OpenGL ES |
 | a browser | WebGPU |
 
-You do not pick between them; `Adapter.backend` tells you which one you got.
-Where a build has more than one, `WGPU_BACKEND` chooses.
 
 GPU triangle example:
 
@@ -74,7 +72,7 @@ open, or a build with nowhere to draw, will not compile.
 
 ## Three things to know
 
-Coordinates are WebGPU's and not OpenGL's, nothing is freed for you, and no
+It follows WebGPU coordinate system and not OpenGL's, nothing is freed for you, and no
 call in this library blocks. See [docs/using.md](docs/using.md).
 
 ## Native target and Browser via wasm
