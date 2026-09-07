@@ -7,9 +7,12 @@ Why hlwgpu is built the way it is. For usage, see the README and
 
 hlwgpu exposes WebGPU rather than a custom API.
 
-WebGPU is the only modern GPU API with a browser implementation, and HashLink
-targets wasm. `wgpu` is its Rust implementation and resolves to Vulkan, Metal
-and D3D12 underneath, so one dependency covers every native platform.
+WebGPU is the only modern GPU API with a browser implementation. HashLink
+itself does not target wasm; ash compiles HashLink bytecode to wasm, which is
+how a HashLink program reaches a browser at all.
+
+`wgpu` is the Rust implementation of WebGPU. It resolves to Vulkan, Metal and
+D3D12 underneath, so one dependency covers every native platform.
 
 ## Native and wasm
 
