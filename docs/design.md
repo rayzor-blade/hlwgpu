@@ -7,16 +7,12 @@ Why hlwgpu is built the way it is. For usage, see the README and
 
 hlwgpu exposes WebGPU rather than a custom API.
 
-WebGPU is the only modern GPU API with a browser implementation. HashLink
-itself does not target wasm; ash compiles HashLink bytecode to wasm, which is
-how a HashLink program reaches a browser at all.
-
 `wgpu` is the Rust implementation of WebGPU. It resolves to Vulkan, Metal and
 D3D12 underneath, so one dependency covers every native platform.
 
 ## Native and wasm
 
-`wgpu.hdll` contains the implementation. `wgpu.wasm` contains none.
+The implementation lives in `wgpu.hdll`, and the wasm build has none of it.
 
 A `wasm32-wasip1` module cannot reach a GPU or call JavaScript, so on wasm the
 primitives call out to the host:
@@ -29,7 +25,7 @@ primitives call out to the host:
 
 ## Generated bindings
 
-`wgpu.api` is the only place a primitive is declared.
+`wgpu.api` is the DSL that declares the primitives.
 
 The same primitive must exist in five files that agree on its name and
 arguments. Nothing checks that agreement at build time, so a mismatch fails at
@@ -49,7 +45,7 @@ generates:
 | `js/hlwgpu.js` | the browser implementation |
 | `IMPORTS.md` | the entry another host must provide |
 
-`build.rs` writes all five. Enum values come from the vendored WebGPU IDL.
+`build.rs` generates all of the above. Enum values come from the vendored WebGPU IDL.
 Only `imp.rs` and the `js` line of each declaration are hand-written.
 
 ## Handles
@@ -67,17 +63,22 @@ space. The integer packs a kind, a generation and a slot index:
 
 ## Resource lifetime
 
-Callers must call `destroy()`. Nothing frees resources automatically.
+Callers release GPU resources by calling `destroy()`, and nothing frees them
+automatically.
 
-ash runs no finalizers. Upstream HashLink does, so relying on them would give
-different behaviour on the two VMs.
+A garbage collector measures pressure on the Haxe heap, where a texture is one
+integer however much video memory it holds. A program can therefore exhaust the
+GPU while its heap still looks nearly empty and no collection is due. WebGPU
+itself makes `destroy()` explicit for the same reason, so this is not a
+concession to how any particular VM collects.
 
-`destroy()` is idempotent. It bumps the slot's generation, so a stale handle
-raises instead of reaching whatever occupies the slot next.
+`destroy()` is idempotent, and bumps the slot's generation so a stale handle
+raises rather than reaching whatever occupies the slot next.
 
 ## GC pointers
 
-Rust holds integer tickets. Haxe holds the closures.
+Rust never stores a pointer into the Haxe heap, only an integer that
+identifies what it needs.
 
 The collector does not scan the malloc heap, so a GC pointer stored only in a
 Rust `Vec` is unrooted and will be collected. Asynchronous callbacks are the
