@@ -105,11 +105,17 @@ jobs:
       # them, and the only way to know is to use one that is not ours.
       - name: Build upstream HashLink
         run: |
-          sudo apt-get install -y --no-install-recommends libpcre2-dev zlib1g-dev
           git clone --depth 1 https://github.com/HaxeFoundation/hashlink.git /tmp/hashlink
-          make -C /tmp/hashlink libhl hl -j"$(nproc)"
-          echo "/tmp/hashlink" >> "$GITHUB_PATH"
-          echo "LD_LIBRARY_PATH=/tmp/hashlink" >> "$GITHUB_ENV"
+          # Only the VM. `make` would build every optional library with it,
+          # and those want SDL, OpenAL and the rest, none of which this needs.
+          cmake -S /tmp/hashlink -B /tmp/hashlink/build \
+            -DCMAKE_BUILD_TYPE=Release -DWITH_VM=ON
+          cmake --build /tmp/hashlink/build --target hl -j"$(nproc)"
+          hldir=$(dirname "$(find /tmp/hashlink/build -type f -name hl -perm -u+x | head -1)")
+          echo "found the VM in $hldir"
+          echo "$hldir" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$hldir:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          "$hldir/hl" --version || true
 
       - name: Build the library
         run: cargo build -p hlwgpu
@@ -118,6 +124,7 @@ jobs:
         run: |
           mkdir -p run
           cp target/debug/libhlwgpu.so run/wgpu.hdll
+          export LD_LIBRARY_PATH="$PWD/run:$LD_LIBRARY_PATH"
           failed=0
           for pair in Compute:compute Render:render Textured:textured Blend:blend \
                       Depth:depth Conventions:conventions Instanced:instanced \
