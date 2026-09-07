@@ -2,13 +2,26 @@
 
 # hlwgpu
 
+[![ci](https://github.com/rayzor-blade/hlwgpu/actions/workflows/ci.yml/badge.svg)](https://github.com/rayzor-blade/hlwgpu/actions/workflows/ci.yml)
+[![release](https://github.com/rayzor-blade/hlwgpu/actions/workflows/release.yml/badge.svg)](https://github.com/rayzor-blade/hlwgpu/actions/workflows/release.yml)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 WebGPU for HashLink: buffers, textures, WGSL shaders, render and compute
 pipelines.
 
-It runs on Vulkan, Metal and D3D12, with OpenGL as a fallback, through
-[wgpu](https://wgpu.rs), the implementation Firefox, Servo and Deno use. In a
-browser it runs on WebGPU. You do not pick the backend; `Adapter.backend` tells
-you which one you got.
+Each platform gets the backend it actually uses, through
+[wgpu](https://wgpu.rs), the implementation Firefox, Servo and Deno use:
+
+| | |
+|---|---|
+| macOS, iOS | Metal |
+| Windows | D3D12, and a separate build that can also use Vulkan |
+| Linux | Vulkan |
+| Android | Vulkan, falling back to OpenGL ES |
+| a browser | WebGPU |
+
+You do not pick between them; `Adapter.backend` tells you which one you got.
+Where a build has more than one, `WGPU_BACKEND` chooses.
 
 GPU triangle example:
 
