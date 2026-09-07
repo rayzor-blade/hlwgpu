@@ -24,6 +24,7 @@ NUL-terminated UTF-16 allocated through the program's `hlp_alloc_bytes`.
 | `hlwgpu_adapter_limit` | `adapter: i32`, `which: i32` | `i32` |
 | `hlwgpu_adapter_destroy` | `adapter: i32` | `void` |
 | `hlwgpu_device_request` | `adapter: i32` | `i32` |
+| `hlwgpu_device_take_error` | `device: i32` | `i32` |
 | `hlwgpu_device_queue` | `device: i32` | `i32` |
 | `hlwgpu_device_poll` | `device: i32` | `void` |
 | `hlwgpu_device_destroy` | `device: i32` | `void` |

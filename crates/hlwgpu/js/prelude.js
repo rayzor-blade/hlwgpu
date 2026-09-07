@@ -42,6 +42,7 @@ export function makeHandles(rt) {
   let nextRequest = 1;
   const canvases = new Map();
   const queueOf_ = new Map();
+  const errors = new Map();
   const passes = new Map();
   const frames = new Map();
   const described = new Map();
@@ -138,11 +139,23 @@ export function makeHandles(rt) {
     return ptr;
   }
 
-  // A device and its queue arrive together, so they are kept together.
+  // A device and its queue arrive together, so they are kept together. The
+  // device also gets somewhere to put the errors it reports, so a validation
+  // mistake is something the program can ask about rather than a console line
+  // nobody sees.
   function putDevice(device) {
     const h = put("device", device);
-    if (h) queueOf_.set(h, put("queue", device.queue));
+    if (!h) return 0;
+    queueOf_.set(h, put("queue", device.queue));
+    const queue = [];
+    errors.set(h, queue);
+    device.addEventListener("uncapturederror", (e) => queue.push(String(e.error)));
     return h;
+  }
+
+  function takeError(device) {
+    const queue = errors.get(device);
+    return queue && queue.length ? str(queue.shift()) : 0;
   }
 
   function queueOf(device) {
@@ -347,7 +360,7 @@ export function makeHandles(rt) {
 
   return {
     put, get, drop, pending, requestReady, requestResult,
-    putDevice, queueOf, dropDevice,
+    putDevice, queueOf, dropDevice, takeError,
     str, readStr, view, handles, writeInto,
     beginPass, pass, endPass, formatName, canvasFormat, attributes, packAttribute, buildPipeline,
     resetPass, addColour, addDepth, beginDescribedPass, resource, layoutOf, releaseFrame,

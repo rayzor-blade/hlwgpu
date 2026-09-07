@@ -7,6 +7,7 @@
 // these signatures have to match what the generated bindings call.
 #![allow(clippy::too_many_arguments)]
 
+use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 
@@ -18,6 +19,13 @@ use crate::handles::{kind_of, PendingRequests, Slab};
 struct DeviceEntry {
     device: wgpu::Device,
     queue: i32,
+    /// What the device has complained about and nobody has collected.
+    ///
+    /// wgpu's default for an uncaptured error is to panic, which takes the
+    /// process with it: a wrong surface format killed a program here with a
+    /// message naming neither the cause nor the caller. A queue instead, and
+    /// `device_take_error` hands them over.
+    errors: Arc<Mutex<VecDeque<String>>>,
 }
 
 /// An encoder and whatever pass is open on it.
@@ -204,12 +212,29 @@ pub unsafe fn device_request(adapter: i32) -> i32 {
     let handle = match pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor::default()))
     {
         Ok((device, queue)) => {
+            let errors: Arc<Mutex<VecDeque<String>>> = Arc::default();
+            let reported = errors.clone();
+            device.on_uncaptured_error(Arc::new(move |error: wgpu::Error| {
+                reported.lock().unwrap().push_back(error.to_string());
+            }));
             let queue = QUEUES.lock().unwrap().put(queue);
-            DEVICES.lock().unwrap().put(DeviceEntry { device, queue })
+            DEVICES
+                .lock()
+                .unwrap()
+                .put(DeviceEntry { device, queue, errors })
         }
         Err(_) => 0,
     };
     REQUESTS.lock().unwrap().settled(handle)
+}
+
+pub unsafe fn device_take_error(device: i32) -> *mut vbyte {
+    let entry = find!(DEVICES, device, std::ptr::null_mut());
+    let next = entry.errors.lock().unwrap().pop_front();
+    match next {
+        Some(message) => ucs2_out(&message),
+        None => std::ptr::null_mut(),
+    }
 }
 
 pub unsafe fn device_queue(device: i32) -> i32 {

@@ -90,6 +90,13 @@ prim adapter_destroy(adapter: i32) -> void
 prim device_request(adapter: i32) -> i32
   js H.pending(H.get("adapter", adapter).requestDevice().then(d => H.putDevice(d)))
 
+# The oldest error this device has reported and not yet been asked about, or
+# null. A validation mistake is a message here rather than a dead process:
+# a bad shader, a format the surface does not have, a buffer used for
+# something it was not created for.
+prim device_take_error(device: i32) -> bytes
+  js H.takeError(device)
+
 prim device_queue(device: i32) -> i32
   js H.queueOf(device)
 

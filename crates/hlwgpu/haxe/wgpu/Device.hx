@@ -18,6 +18,20 @@ abstract Device(Int) from Int to Int {
 		return _Native.device_queue(this);
 	}
 
+	/**
+		The oldest problem this device reported and has not been asked about,
+		or null.
+
+		A mistake in a shader, a format the surface does not support, a buffer
+		used for something it was not created for: these arrive here rather
+		than stopping the program. Ask after anything that might be wrong, and
+		keep asking until it answers null.
+	**/
+	public function takeError() : String {
+		var message = _Native.device_take_error(this);
+		return message == null ? null : @:privateAccess String.fromUCS2(message);
+	}
+
 	public inline function buffer(size : Int, usage : BufferUsage) : Buffer {
 		return _Native.buffer_create(this, size, usage);
 	}

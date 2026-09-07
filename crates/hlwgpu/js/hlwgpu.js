@@ -70,6 +70,7 @@ export function makeHandles(rt) {
   let nextRequest = 1;
   const canvases = new Map();
   const queueOf_ = new Map();
+  const errors = new Map();
   const passes = new Map();
   const frames = new Map();
   const described = new Map();
@@ -166,11 +167,23 @@ export function makeHandles(rt) {
     return ptr;
   }
 
-  // A device and its queue arrive together, so they are kept together.
+  // A device and its queue arrive together, so they are kept together. The
+  // device also gets somewhere to put the errors it reports, so a validation
+  // mistake is something the program can ask about rather than a console line
+  // nobody sees.
   function putDevice(device) {
     const h = put("device", device);
-    if (h) queueOf_.set(h, put("queue", device.queue));
+    if (!h) return 0;
+    queueOf_.set(h, put("queue", device.queue));
+    const queue = [];
+    errors.set(h, queue);
+    device.addEventListener("uncapturederror", (e) => queue.push(String(e.error)));
     return h;
+  }
+
+  function takeError(device) {
+    const queue = errors.get(device);
+    return queue && queue.length ? str(queue.shift()) : 0;
   }
 
   function queueOf(device) {
@@ -375,7 +388,7 @@ export function makeHandles(rt) {
 
   return {
     put, get, drop, pending, requestReady, requestResult,
-    putDevice, queueOf, dropDevice,
+    putDevice, queueOf, dropDevice, takeError,
     str, readStr, view, handles, writeInto,
     beginPass, pass, endPass, formatName, canvasFormat, attributes, packAttribute, buildPipeline,
     resetPass, addColour, addDepth, beginDescribedPass, resource, layoutOf, releaseFrame,
@@ -416,6 +429,11 @@ export function hlwgpuImports(rt) {
     // The queue comes back with the device, so `device_queue` needs no request of
     // its own.
     hlwgpu_device_request: (adapter) => H.pending(H.get("adapter", adapter).requestDevice().then(d => H.putDevice(d))),
+    // The oldest error this device has reported and not yet been asked about, or
+    // null. A validation mistake is a message here rather than a dead process:
+    // a bad shader, a format the surface does not have, a buffer used for
+    // something it was not created for.
+    hlwgpu_device_take_error: (device) => H.takeError(device),
     hlwgpu_device_queue: (device) => H.queueOf(device),
     // Lets finished work report itself. A page does this from the event loop, so
     // there is nothing to do there.

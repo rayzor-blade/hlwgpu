@@ -76,6 +76,15 @@ class _Native {
 		return 0;
 	}
 
+	// The oldest error this device has reported and not yet been asked about, or
+	// null. A validation mistake is a message here rather than a dead process:
+	// a bad shader, a format the surface does not have, a buffer used for
+	// something it was not created for.
+	@:hlNative("wgpu", "device_take_error")
+	public static function device_take_error(device : Int) : hl.Bytes {
+		return null;
+	}
+
 	@:hlNative("wgpu", "device_queue")
 	public static function device_queue(device : Int) : Int {
 		return 0;
