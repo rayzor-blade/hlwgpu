@@ -10,9 +10,9 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [build-dependencies]
-hl_native_gen = { path = "../hl_native_gen" }
+hl_native_gen = { workspace = true }
 
 [dependencies]
-hl_abi = { path = "../hl_abi" }
+hl_abi = { workspace = true }
 winit = "0.30"
 raw-window-handle = "0.6"

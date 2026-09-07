@@ -108,6 +108,17 @@ to the module as imports. Nothing needs compiling.
 `IMPORTS.md` lists every function a host has to provide, so you can write your
 own instead.
 
+## What is in here
+
+| | |
+|---|---|
+| `crates/hlwgpu` | the library: `wgpu.hdll` natively, `wgpu.wasm` and `hlwgpu.js` for a page |
+| `crates/hlwindow` | a small [winit](https://github.com/rust-windowing/winit) companion, so there is a window to draw into. Neither crate depends on the other |
+| `crates/hl_native_gen` | writes every side of a HashLink native library from one declaration |
+
+`docs/design.md` is why it is built the way it is, and
+`crates/hlwgpu/spec/webgpu.idl` is the checklist it is measured against.
+
 ## Getting a window to draw into
 
 hlwgpu does not create windows. Implement `wgpu.WindowSource` on whatever

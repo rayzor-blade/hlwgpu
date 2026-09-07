@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.dependencies]
+# Its own repository, because the HashLink C ABI is not specific to a GPU
+# library and ash's own native libraries use it too.
+hl_abi = { git = "https://github.com/rayzor-blade/hl_abi" }
+hl_native_gen = { path = "crates/hl_native_gen" }
+
+# One large generated match. Optimising it costs far more than running it ever
+# saves, since either way it only makes a call into native code.
+[profile.dev.package.hl_native_gen]
+opt-level = 0

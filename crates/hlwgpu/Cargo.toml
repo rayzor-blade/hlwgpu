@@ -19,10 +19,10 @@ default = ["native"]
 native = ["dep:wgpu", "dep:pollster", "dep:raw-window-handle"]
 
 [build-dependencies]
-hl_native_gen = { path = "../hl_native_gen" }
+hl_native_gen = { workspace = true }
 
 [dependencies]
-hl_abi = { path = "../hl_abi" }
+hl_abi = { workspace = true }
 wgpu = { version = "30", optional = true }
 # Must resolve to the same version wgpu uses, or the handles are not its.
 raw-window-handle = { version = "0.6", optional = true }
