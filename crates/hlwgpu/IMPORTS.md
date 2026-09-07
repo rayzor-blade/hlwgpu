@@ -2,8 +2,8 @@
 
 GENERATED from `wgpu.api`.
 
-Natively none of this applies: `wgpu.hdll` holds the implementation and
-answers the VM directly.
+Natively none of this applies: `wgpu.hdll` holds the implementation,
+and the VM calls straight into it.
 
 On wasm, `wgpu.wasm` holds no implementation. It imports the following
 from `env`, and whatever instantiates the module has to provide them.

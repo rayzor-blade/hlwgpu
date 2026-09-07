@@ -4,8 +4,8 @@ package wgpu;
 
 /**
 	The primitives, one to one. A program is not meant to call these:
-	the classes beside them are the API. `wgpu.hdll` answers them natively,
-	and a host answers them on wasm.
+	the classes beside them are the API. `wgpu.hdll` implements them
+	natively; on wasm a host does.
 **/
 @:keep
 class _Native {

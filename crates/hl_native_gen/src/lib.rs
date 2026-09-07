@@ -2,7 +2,7 @@
 //!
 //! One primitive otherwise gets written out five times -- the Rust that
 //! implements it, the Rust that forwards it on wasm, the JavaScript that
-//! answers it in a page, the Haxe extern, and the table another host reads.
+//! implements it in a page, the Haxe extern, and the table another host reads.
 //! Keeping those in step by hand is how a wrong argument type gets into one
 //! of them and nowhere else.
 //!
@@ -32,7 +32,7 @@
 //! arguments in scope, plus `H` from the prelude. Rust bodies are not
 //! declared -- they are `imp::<name>`, and a mismatch is a link error.
 //!
-//! `js -` marks one a page genuinely cannot answer -- opening a window, when
+//! `js -` marks one a page has no way to do -- opening a window, when
 //! the page owns its own. The import still exists and still links; it says
 //! why instead of being missing.
 
@@ -340,7 +340,7 @@ fn emit_wasm(d: &Decl, src: &str) -> String {
     let mut out = banner(src);
     let _ = write!(
         out,
-        "//\n// Every primitive forwards to the host, which answers `env.{}*`.\n\
+        "//\n// Every primitive forwards to whatever is hosting it, which provides\n// `env.{}*`.\n\
          // A wasip1 module has no GPU and no JavaScript, so there is no\n\
          // implementation to hold here; `IMPORTS.md` is what a host supplies.\n\n",
         d.prefix
@@ -463,8 +463,8 @@ fn emit_haxe(d: &Decl, src: &str) -> String {
         "// GENERATED from `{src}`. Edit the declaration, not this file.\n\n\
          package {};\n\n\
          /**\n\tThe primitives, one to one. A program is not meant to call these:\n\
-         \tthe classes beside them are the API. `{}.hdll` answers them natively,\n\
-         \tand a host answers them on wasm.\n**/\n@:keep\nclass _Native {{\n",
+         \tthe classes beside them are the API. `{}.hdll` implements them\n\
+         \tnatively; on wasm a host does.\n**/\n@:keep\nclass _Native {{\n",
         d.library, d.library
     );
     for p in &d.prims {
@@ -508,8 +508,8 @@ fn emit_contract(d: &Decl, src: &str) -> String {
     let mut out = format!(
         "# What a host must supply for `{}`\n\n\
          GENERATED from `{src}`.\n\n\
-         Natively none of this applies: `{}.hdll` holds the implementation and\n\
-         answers the VM directly.\n\n\
+         Natively none of this applies: `{}.hdll` holds the implementation,\n\
+         and the VM calls straight into it.\n\n\
          On wasm, `{}.wasm` holds no implementation. It imports the following\n\
          from `env`, and whatever instantiates the module has to provide them.\n\
          A page gets them from `hlwgpu.js`; any other host implements this table.\n\n\

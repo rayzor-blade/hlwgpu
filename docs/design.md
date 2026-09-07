@@ -25,16 +25,16 @@ three backends to maintain.
 ## Where the implementation lives
 
 **Natively, `wgpu.hdll` is the whole library.** It contains wgpu, links against
-libhl and answers the `DEFINE_PRIM` protocol, so it loads in upstream HashLink
+libhl and implements the `DEFINE_PRIM` protocol, so it loads in upstream HashLink
 as readily as in ash. Nothing in this repo is needed to run it. That is the
 baseline for a library others consume, and it is the common case.
 
 **On wasm the split is forced by the platform, not chosen.** A `wasm32-wasip1`
 module has no GPU and no JavaScript interop; no version of this library reaches
 a device from inside one. So on wasm, and only on wasm, the primitives call out
--- and hlwgpu ships what answers them:
+-- and hlwgpu ships what implements them:
 
-| context | guest | what answers it | implementation |
+| context | guest | what implements it | where |
 |---|---|---|---|
 | native, any HashLink | -- | -- | `wgpu.hdll`, self-contained |
 | wasm in a page | `wgpu.wasm` calls out | `hlwgpu.js`, linked by the page | `navigator.gpu` |
@@ -66,7 +66,7 @@ the three.
 
 An earlier draft had the guest importing `ash_host_wgpu_*` with the host half
 inside `ash_wasm_runtime`, generalising from `crates/tinysdl`. That was
-backwards. tinysdl is a demo -- sixty-seven primitives answered by a recorder,
+backwards. tinysdl is a demo -- sixty-seven primitives implemented by a recorder,
 built to prove a mechanism -- and what is worth keeping from it is the
 mechanism, not its architecture. A library whose contract is defined by one
 embedder's host is not portable, and this one has to be.
@@ -116,9 +116,14 @@ not a goal; nothing here waits on it.
 ## Naming
 
 Project, crate and haxelib: `hlwgpu`. The native library it ships is
-`wgpu.hdll` / `wgpu.wasm`, so a primitive is `@:hlNative("wgpu", "device_create")`
-answered by `hlp_device_create` -- the relationship `hlsdl` has to `sdl.hdll`.
-Haxe package `wgpu`.
+`wgpu.hdll` / `wgpu.wasm`, so a primitive is
+`@:hlNative("wgpu", "wgpu_device_create")`, resolved by the exported
+`hlp_wgpu_device_create` -- the relationship `hlsdl` has to `sdl.hdll`. Haxe
+package `wgpu`.
+
+The library's name is in the resolver on purpose. `hlp_device_create` is a
+name any library might export, and two of them in one program would be
+offering the same symbol.
 
 ## Three layers
 

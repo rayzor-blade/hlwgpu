@@ -23,7 +23,7 @@ use hl_abi::vbyte;
 const CLOSED: i32 = 1;
 const RESIZED: i32 = 2;
 
-/// The platform codes `platform` answers with.
+/// The platform codes `platform` returns.
 const APPKIT: i32 = 1;
 const WIN32: i32 = 2;
 const XLIB: i32 = 3;
@@ -64,7 +64,7 @@ thread_local! {
     static WINDOWS: RefCell<Vec<Option<Open>>> = const { RefCell::new(Vec::new()) };
 }
 
-/// Runs `body` on an open window, or answers `miss`.
+/// Runs `body` on an open window, or returns `miss`.
 fn with<T>(handle: i32, miss: T, body: impl FnOnce(&mut Open) -> T) -> T {
     WINDOWS.with(|windows| {
         let mut windows = windows.borrow_mut();

@@ -2,8 +2,8 @@
 
 GENERATED from `window.api`.
 
-Natively none of this applies: `window.hdll` holds the implementation and
-answers the VM directly.
+Natively none of this applies: `window.hdll` holds the implementation,
+and the VM calls straight into it.
 
 On wasm, `window.wasm` holds no implementation. It imports the following
 from `env`, and whatever instantiates the module has to provide them.

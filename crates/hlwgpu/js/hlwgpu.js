@@ -272,7 +272,7 @@ export function makeHandles(rt) {
   }
 
   // What a canvas actually wants, rather than a guess. -1 for a name this
-  // library has none for, which is what the native side answers too.
+  // library has none for, which is what the native side returns too.
   function canvasFormat() {
     const at = FORMATS.indexOf(navigator.gpu.getPreferredCanvasFormat());
     return at < 0 ? -1 : at;

@@ -1,6 +1,6 @@
 //! What the primitives do, over `wgpu`.
 //!
-//! Serves the native library, and later a host answering the wasm imports.
+//! Serves the native library, and later a host implementing the wasm imports.
 //! Nothing here is generated; `bindings` is the part that is.
 
 // A primitive's arity comes from `wgpu.api`, not from a style choice here:
@@ -191,7 +191,7 @@ pub unsafe fn adapter_destroy(adapter: i32) {
 
 pub unsafe fn request_ready(request: i32) -> bool {
     // Natively a callback runs only when the device is asked, so a caller
-    // polling this is what drives its own answer. `Poll` never blocks.
+    // polling this is what makes it finish. `Poll` never blocks.
     let device = REQUESTS.lock().unwrap().device_of(request);
     if device != 0 {
         if let Some(entry) = DEVICES.lock().unwrap().get(device) {
