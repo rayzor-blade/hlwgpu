@@ -2532,12 +2532,12 @@ checksum = "163b33ed8786455e2fa5d72f554057ce3f3182425434f756cd39c99839d88e23"
 [[package]]
 name = "xgpu-backend"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a#4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c#3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c"
 
 [[package]]
 name = "xgpu-bindgen"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a#4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c#3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2549,7 +2549,7 @@ dependencies = [
 [[package]]
 name = "xgpu-core"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a#4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c#3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c"
 
 [[package]]
 name = "xkbcommon-dl"

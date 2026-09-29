@@ -2,8 +2,9 @@
 
 use std::ffi::c_void;
 use std::marker::PhantomData;
-use std::mem::{size_of, ManuallyDrop};
+use std::mem::{ManuallyDrop, size_of};
 use std::sync::Arc;
+#[cfg(not(target_family = "wasm"))]
 use std::sync::OnceLock;
 
 use ash_future_abi::AshFuture;
@@ -21,7 +22,7 @@ unsafe extern "C" {
 type FutureCreate = unsafe extern "C" fn() -> *mut AshFuture;
 type FutureSettle = unsafe extern "C" fn(*mut AshFuture, *mut vdynamic) -> bool;
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_family = "wasm")))]
 unsafe fn runtime_symbol<T: Copy>(name: &[u8]) -> Option<T> {
     unsafe {
         libloading::os::unix::Library::this()
@@ -42,6 +43,7 @@ unsafe fn runtime_symbol<T: Copy>(name: &[u8]) -> Option<T> {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 fn future_create() -> FutureCreate {
     static SYMBOL: OnceLock<Option<FutureCreate>> = OnceLock::new();
     match *SYMBOL.get_or_init(|| unsafe { runtime_symbol(b"hlp_future_create\0") }) {
@@ -56,6 +58,12 @@ fn future_create() -> FutureCreate {
     }
 }
 
+#[cfg(target_family = "wasm")]
+fn future_create() -> FutureCreate {
+    ash_future_abi::hlp_future_create
+}
+
+#[cfg(not(target_family = "wasm"))]
 fn future_resolve() -> FutureSettle {
     static SYMBOL: OnceLock<Option<FutureSettle>> = OnceLock::new();
     match *SYMBOL.get_or_init(|| unsafe { runtime_symbol(b"hlp_future_resolve\0") }) {
@@ -70,6 +78,15 @@ fn future_resolve() -> FutureSettle {
     }
 }
 
+#[cfg(target_family = "wasm")]
+fn future_resolve() -> FutureSettle {
+    unsafe extern "C" fn resolve(future: *mut AshFuture, value: *mut vdynamic) -> bool {
+        unsafe { ash_future_abi::hlp_future_resolve(future, value.cast()) }
+    }
+    resolve
+}
+
+#[cfg(not(target_family = "wasm"))]
 fn future_reject() -> FutureSettle {
     static SYMBOL: OnceLock<Option<FutureSettle>> = OnceLock::new();
     match *SYMBOL.get_or_init(|| unsafe { runtime_symbol(b"hlp_future_reject\0") }) {
@@ -82,6 +99,14 @@ fn future_reject() -> FutureSettle {
             unreachable!()
         }
     }
+}
+
+#[cfg(target_family = "wasm")]
+fn future_reject() -> FutureSettle {
+    unsafe extern "C" fn reject(future: *mut AshFuture, error: *mut vdynamic) -> bool {
+        unsafe { ash_future_abi::hlp_future_reject(future, error.cast()) }
+    }
+    reject
 }
 
 #[derive(Clone, Copy)]
@@ -103,7 +128,17 @@ impl Value {
 }
 
 pub mod host {
-    use super::{hl_throw, ErrorKind, Text};
+    use super::{ErrorKind, Text, c_void, hl_throw};
+
+    #[cfg(target_family = "wasm")]
+    unsafe extern "C" {
+        fn ash_host_agent(name: *const u8, name_len: u32, address: u32) -> i32;
+        fn ash_host_watch(
+            word: *const u32,
+            handler: unsafe extern "C" fn(*mut c_void),
+            context: *mut c_void,
+        ) -> *const u32;
+    }
 
     pub fn raise(kind: ErrorKind, message: &str) {
         let prefix = match kind {
@@ -112,6 +147,46 @@ pub mod host {
         };
         let text = Text::new(&format!("{prefix}{message}"));
         unsafe { hl_throw(text.value().0) }
+    }
+
+    /// Start xgpu's browser service through Ash's runtime-owned page harness.
+    pub fn agent(name: &str, address: usize) -> bool {
+        #[cfg(target_family = "wasm")]
+        {
+            let Ok(address) = u32::try_from(address) else {
+                return false;
+            };
+            let Ok(name_len) = u32::try_from(name.len()) else {
+                return false;
+            };
+            return unsafe { ash_host_agent(name.as_ptr(), name_len, address) != 0 };
+        }
+        #[cfg(not(target_family = "wasm"))]
+        {
+            let _ = (name, address);
+            false
+        }
+    }
+
+    /// Register the mailbox completion word with Ash's fiber scheduler.
+    ///
+    /// # Safety
+    /// The word and callback context must remain valid for the program's
+    /// lifetime.
+    pub unsafe fn watch(
+        word: *const u32,
+        handler: unsafe extern "C" fn(*mut c_void),
+        context: *mut c_void,
+    ) -> *const u32 {
+        #[cfg(target_family = "wasm")]
+        {
+            return unsafe { ash_host_watch(word, handler, context) };
+        }
+        #[cfg(not(target_family = "wasm"))]
+        {
+            let _ = (word, handler, context);
+            std::ptr::null()
+        }
     }
 }
 

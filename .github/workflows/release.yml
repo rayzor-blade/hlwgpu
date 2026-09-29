@@ -1,11 +1,18 @@
 name: release
 
-# Tag a version to publish one. `workflow_dispatch` builds everything without
-# publishing, which is how to find out whether a platform still compiles.
+# A v* tag publishes directly. A manual run validates by default and publishes
+# only when given an explicit release tag.
 on:
   push:
     tags: ['v*']
+  schedule:
+    - cron: '17 3 * * *'
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag to create and publish, for example v2026.09.29; leave empty to validate only'
+        required: false
+        type: string
 
 concurrency:
   group: release-${{ github.ref }}
@@ -87,7 +94,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hlwgpu-${{ matrix.name }}
+          name: hlwgpu-hdll-${{ matrix.name }}
           path: out/
 
   mobile:
@@ -158,7 +165,7 @@ jobs:
       # not, so they are rebuilt. That needs nightly and rust-src.
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          targets: wasm32-wasip1
+          targets: wasm32-wasip1-threads
           components: rust-src
 
       - uses: Swatinem/rust-cache@v2
@@ -173,16 +180,23 @@ jobs:
       - name: Every primitive is exported
         run: |
           missing=0
-          for p in $(sed -n 's/^prim \([a-z_0-9]*\).*/hlp_wgpu_\1/p' crates/hlwgpu/wgpu.api); do
-            strings out/wgpu.wasm | grep -q "$p" || { echo "::error::$p is not exported"; missing=1; }
+          for p in $(sed -n 's/.*@:hlNative("xgpu", "\([^"]*\)").*/hlp_\1/p' haxe/gpu/*.hx | sort -u); do
+            strings out/xgpu.wasm | grep -q "$p" || { echo "::error::$p is not exported"; missing=1; }
           done
           exit $missing
 
-      - run: cp LICENSE README.md crates/hlwgpu/IMPORTS.md out/
+      - name: Check and collect
+        run: |
+          node --check out/gpu.mjs
+          node --check out/gpu-worker.mjs
+          node --check out/gpu-agent.mjs
+          node --check out/hlwgpu.js
+          cp -r haxe out/
+          cp haxelib.json LICENSE README.md crates/hlwgpu/IMPORTS.md out/
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hlwgpu-wasm
+          name: hlwgpu-wasm-ash
           path: out/
 
   haxe:
@@ -205,11 +219,22 @@ jobs:
   publish:
     name: publish
     needs: [native, mobile, wasm, haxe]
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != '' || github.event_name == 'schedule'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        if: github.event_name == 'schedule'
+        with:
+          fetch-depth: 0
+
+      - name: Point the nightly tag at this build
+        if: github.event_name == 'schedule'
+        run: |
+          git tag --force nightly "$GITHUB_SHA"
+          git push --force origin refs/tags/nightly
+
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
@@ -225,5 +250,9 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event_name == 'schedule' && 'nightly' || inputs.release_tag || github.ref_name }}
+          target_commitish: ${{ github.sha }}
           files: release/*.zip
           generate_release_notes: true
+          prerelease: ${{ github.event_name == 'schedule' }}
+          make_latest: ${{ github.event_name == 'schedule' && 'false' || 'true' }}

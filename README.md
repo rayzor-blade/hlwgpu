@@ -38,6 +38,10 @@ Use the official [WebGPU specification](https://www.w3.org/TR/webgpu/) as the
 API reference for the portable `gpu` surface. hlwgpu also exposes xgpu's
 native extensions where the selected backend supports them.
 
+hlwgpu follows the WebGPU IDL snapshot pinned by xgpu. A release therefore
+identifies that API snapshot as well as the adapter binaries; hlwgpu does not
+maintain a separate GPU API version.
+
 ## Typed shaders
 
 Implement `hlwgpu.hxsl.Shader` and put the shader expression in `SRC`. The
@@ -76,10 +80,16 @@ constant keys as static fields.
 | Windows | D3D12, with a Vulkan release variant |
 | Linux | Vulkan |
 | Android | Vulkan, falling back to OpenGL ES |
+| Browser Wasm | Browser WebGPU through Ash's side-module and agent harness |
 
-Browser support depends on the future Ash/xgpu WebAssembly side-module path.
-The API and `ash.Future<T>` signatures are shared with that target so programs
-do not need a second GPU surface when it lands.
+Native release archives contain `xgpu.hdll` and the generated Haxe sources.
+The Wasm archive contains `xgpu.wasm`, the runtime-neutral `hlwgpu.js` entry,
+and the Ash browser agent modules. `hlwgpu.js` exposes the side-module URL and
+accepts any runtime's dylink loader. Ash owns its browser page, loader, shared
+memory, and isolation headers around the supplied agent files.
+
+A fresh archive is published under the moving `nightly` release each day.
+Versioned releases follow the WebGPU IDL snapshot pinned by xgpu.
 
 ## Contributing
 

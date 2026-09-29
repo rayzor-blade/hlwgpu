@@ -7,6 +7,48 @@ fn main() {
     let model = xgpu_bindgen::generate_hashlink(&api, xgpu_bindgen::WEBGPU_IDL)
         .expect("generating the xgpu HashLink adapter");
     std::fs::write(out.join("xgpu_hashlink.rs"), model).expect("writing the xgpu adapter");
+
+    let browser_idl = xgpu_bindgen::browser_idl();
+    let wire = xgpu_bindgen::wire::wire(&browser_idl).expect("generating the xgpu browser wire");
+    std::fs::write(out.join("xgpu_wire.rs"), wire.rust).expect("writing the xgpu browser wire");
+    let scoped = |source: &str| {
+        source
+            .lines()
+            .map(|line| {
+                line.strip_prefix("//!")
+                    .map_or(line.to_owned(), |doc| format!("//{doc}"))
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+            .replace("crate ::", "crate :: xgpu ::")
+            .replace("crate::", "crate::xgpu::")
+    };
+    let web = scoped(xgpu_backend::WEB);
+    std::fs::write(out.join("xgpu_web.rs"), web).expect("writing the xgpu web implementation");
+    let web_backend =
+        xgpu_bindgen::hashlink_web_backend("gpu", &api, &browser_idl, xgpu_backend::WEB)
+            .expect("generating the xgpu web backend");
+    let web_backend = web_backend
+        .lines()
+        .map(|line| {
+            line.strip_prefix("//!")
+                .map_or(line.to_owned(), |doc| format!("//{doc}"))
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+        .replace("crate ::", "crate :: xgpu ::")
+        .replace("crate::", "crate::xgpu::");
+    std::fs::write(out.join("xgpu_web_backend.rs"), web_backend)
+        .expect("writing the xgpu web backend");
+
+    println!("cargo:rerun-if-env-changed=HLWGPU_WASM_JS_OUT");
+    if let Some(js_out) = std::env::var_os("HLWGPU_WASM_JS_OUT") {
+        let js_out = std::path::PathBuf::from(js_out);
+        std::fs::create_dir_all(&js_out).expect("creating the wasm JavaScript output");
+        std::fs::write(js_out.join("gpu-agent.mjs"), wire.js)
+            .expect("writing the xgpu browser agent");
+    }
+
     let manifest = std::path::PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap());
     let haxe = manifest.join("../..").join("haxe");
     for file in xgpu_bindgen::haxe(xgpu_bindgen::haxe::Runtime::HashLink)

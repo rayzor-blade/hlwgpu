@@ -338,7 +338,7 @@ fn rust_head(out: &mut String, d: &Decl, p: &Prim) {
     } else {
         format!(" -> {}", ty(&p.ret).unwrap().rust)
     };
-    out.push_str("#[no_mangle]\n");
+    out.push_str("#[unsafe(no_mangle)]\n");
     let _ = writeln!(
         out,
         "pub unsafe extern \"C\" fn {}_{}({params}){ret} {{",
@@ -666,10 +666,9 @@ fn generate_inner(api: impl AsRef<Path>, haxe_root: Option<PathBuf>) -> io::Resu
     fs::write(out.join("wasm.rs"), emit_wasm(&decl, &src))?;
 
     // Best effort: a read-only checkout still builds, and the committed
-    // copies are what a consumer reads.
-    // A library with no prelude gets none; a native-only one has nothing for
-    // a page to hold.
-    let prelude = fs::read_to_string(&prelude_path).unwrap_or_default();
+    // copies are what a consumer reads. `generate_backend` deliberately emits
+    // only Rust into OUT_DIR; a shared API generator owns the public Haxe,
+    // JavaScript and host contract while an adapter is being retired.
     if let Some(haxe_root) = &haxe_root {
         for e in &decl.enums {
             let _ = write_if_changed(
@@ -681,17 +680,18 @@ fn generate_inner(api: impl AsRef<Path>, haxe_root: Option<PathBuf>) -> io::Resu
             );
         }
     }
-    let module = decl.prefix.trim_end_matches('_').to_string();
-    let _ = write_if_changed(
-        &root.join(format!("js/{module}.js")),
-        &emit_js(&decl, &src, &prelude),
-    );
     if let Some(haxe_root) = &haxe_root {
+        let prelude = fs::read_to_string(&prelude_path).unwrap_or_default();
+        let module = decl.prefix.trim_end_matches('_').to_string();
+        let _ = write_if_changed(
+            &root.join(format!("js/{module}.js")),
+            &emit_js(&decl, &src, &prelude),
+        );
         let _ = write_if_changed(
             &root.join(haxe_root).join(&decl.library).join("_Native.hx"),
             &emit_haxe(&decl, &src),
         );
+        let _ = write_if_changed(&root.join("IMPORTS.md"), &emit_contract(&decl, &src));
     }
-    let _ = write_if_changed(&root.join("IMPORTS.md"), &emit_contract(&decl, &src));
     Ok(())
 }

@@ -6,8 +6,8 @@
 //! read as a texture. `js/prelude.js` uses the same layout.
 
 use std::collections::{HashMap, VecDeque};
-use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 
 use crate::bindings::kinds::Kind;
 

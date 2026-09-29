@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 
 use crate::bindings::kinds::Kind;
-use crate::handles::{kind_of, PendingRequests, Slab};
+use crate::handles::{PendingRequests, Slab, kind_of};
 use hl_abi::{hl_alloc_bytes, vbyte};
 
 /// A device and the queue that came back with it.
