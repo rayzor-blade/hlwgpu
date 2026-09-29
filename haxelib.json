@@ -6,7 +6,7 @@
   "description": "WebGPU for Haxe on Ash and HashLink, backed by xgpu and wgpu.",
   "contributors": ["darmie"],
   "version": "0.1.0",
-  "releasenote": "First release.",
+  "releasenote": "xgpu-generated WebGPU API, native hdlls, a browser side module, and HXSL-to-WGSL support.",
   "classPath": "haxe",
   "dependencies": {}
 }

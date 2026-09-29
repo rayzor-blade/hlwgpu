@@ -1,21 +1,15 @@
-# The WebGPU IDL
+# Legacy WebGPU IDL snapshot
 
-`webgpu.idl` as published at <https://gpuweb.github.io/gpuweb/webgpu.idl>,
-fetched 2026-09-07. Auto-generated from the specification; not edited here.
+This copy of `webgpu.idl` was fetched from the official WebGPU specification
+on 2026-09-07. It remains only because the legacy `wgpu.api` generator reads a
+small enum subset while that implementation is being retired.
 
-It is vendored because it is the checklist. hlwgpu does not have to look like
-this IDL -- its API is its own -- but everything a browser's WebGPU can do
-has to be reachable through it, and this is the list of what that is.
+It is not hlwgpu's public API checklist and its old operation, dictionary, and
+enum coverage counts are no longer meaningful. The canonical WebGPU IDL,
+generated API, coverage work, and native extension catalog live in
+[xgpu](https://github.com/rayzor-blade/xgpu).
 
-Measured against it on the day it was vendored:
-
-| | in the spec | reachable |
-|---|---|---|
-| operations | 66 | 50 |
-| dictionary members | 121 | few |
-| enum values | 278 | 57 |
-
-The enums are where most of it lives: `GPUTextureFormat` alone has 101 values
-and hlwgpu names five. They need no new primitives -- they are the contents of
-descriptors -- and seven of them are now generated from this file by
-`hl_native_gen`, named in `wgpu.api`. The rest should follow the same way.
+Use the official [WebGPU specification](https://www.w3.org/TR/webgpu/) as the
+portable API reference. Do not add new public bindings here; update xgpu and
+then refresh hlwgpu's generated `haxe/gpu` package by advancing the pinned
+xgpu revision.

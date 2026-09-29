@@ -1,70 +1,61 @@
-# What is done and what is next
+# Status and remaining work
 
-`docs/design.md` is why the library is built the way it is. This is where it
-has got to.
+## Available now
 
-## Done
+- The generated `gpu` package exposes the portable WebGPU surface and xgpu's
+  native extensions through one HashLink API.
+- Native releases use wgpu on Metal, D3D12, Vulkan, and Android OpenGL ES.
+- Promise-returning operations use `ash.Future<T>`.
+- Buffers, textures, pipelines, passes, query sets, render bundles, surfaces,
+  error scopes, pipeline caches, mesh shaders, and ray-tracing descriptors are
+  represented by the generated API.
+- HXSL render and compute shaders compile to WGSL at Haxe compile time.
+- Releases contain desktop hdlls, mobile static archives, committed Haxe
+  externs, and an Ash-compatible browser side-module bundle.
 
-Native first throughout. A desktop library that works is worth more than two
-halves that do not.
+Feature coverage of the shared API is tracked in
+[xgpu](https://github.com/rayzor-blade/xgpu). hlwgpu should not maintain a
+second operation or enum count.
 
-| | |
-|---|---|
-| **The seam** | `wgpu.api`, the generator, and an adapter reporting its name, backend and limits |
-| **Compute** | buffer upload, a WGSL kernel, dispatch, and a polled readback checked value by value |
-| **Offscreen render** | vertex buffers, a render pipeline, a pass into a texture, pixels checked exactly |
-| **Textured drawing** | samplers, texture upload, index buffers, and bind groups holding buffers, views and samplers together |
-| **Presentation** | a surface on a native window, drawn and presented every frame |
-| **Capability** | blending, depth, stencil, viewport, scissor, instancing, multiple colour targets, indirect draws, the missing copies, and errors that report instead of killing the process |
+## Highest-value remaining work
 
-Fourteen tests, all asserting exact bytes, run in CI under ash and under
-upstream HashLink on lavapipe.
+### Browser execution tests
 
-**50 of 66 WebGPU operations.** `crates/hlwgpu/spec/webgpu.idl` is the
-checklist; `crates/hlwgpu/spec/README.md` has the current count.
+The threaded `xgpu.wasm` side module builds, links, and exports the generated
+API. It still needs a CI browser test that loads the bundle through Ash,
+requests a real browser adapter, runs a compute pass, renders to a canvas, and
+checks an asynchronous failure path.
 
-## Next
+### Host conformance
 
-**The browser half has never run.** It is generated, it links, and it has the
-right imports and exports. Nothing has executed it in a page. That needs a
-host to supply the imports and a browser to check it in.
+`hlwgpu.js` lets another runtime locate and load the side module, and
+`IMPORTS.md` specifies the ABI. A small conformance harness should verify a
+non-Ash loader against the same mailbox and Future behavior.
 
-Milestones 1 to 4 should then run unchanged against `navigator.gpu`. If any of
-it needs a Haxe-side `#if`, something in the design went wrong.
+### Remove the legacy implementation
 
-## Backlog
+The old `wgpu.api`, `src/imp.rs`, native bindings, local handle table, and
+`hl_native_gen` remain for compatibility during the xgpu migration. Once no
+consumer needs their symbols, remove them so `xgpu.hdll` contains one object
+model and one generated binding pipeline.
 
-**Operations, in the order they are likely to be missed.**
+### Package the Future dependency
 
-- Query sets, timestamps and occlusion. Profiling.
-- Explicit bind group and pipeline layouts. Sharing a bind group between
-  pipelines.
-- Render bundles. Recording a run of draws once and replaying it.
-- Async pipeline creation. Avoiding a hitch that can already be measured.
+Ash already provides the Future ABI. The release story for a program launched
+by upstream HashLink should make the matching `ash.Future` Haxe package and
+runtime symbols explicit and easy to install.
 
-None of these blocks a renderer.
+### Runtime smoke tests
 
-**Six operations cannot be done natively at all.** `importExternalTexture`,
-`copyExternalImageToTexture`, `getConfiguration` and `unconfigure` are browser
-concepts with no wgpu counterpart. Two `constructor` entries are error types
-rather than methods. Adding them would break the rule that no primitive works
-on one target only.
+Release jobs prove that every target compiles. Add small execution tests on
+available Metal, D3D12, Vulkan/lavapipe, and browser WebGPU runners so adapter
+selection, resource lifetime, and async completion are exercised as well.
 
-**Lifetime helpers.** Nothing tracks what a program forgot to destroy. A
-scope object that destroys what was registered with it, and a debug-build
-count of live handles per kind, would both help. `Slab::live` already counts
-them; no primitive exposes it.
+## Release maintenance
 
-**Housekeeping.**
-
-- The declaration parser splits strings by hand. That is fine for `prim` and
-  `js` lines and will not stay fine once descriptors grow. Use nom or pest.
-- `haxelib.json` has a version nothing sets. The release workflow does not
-  read it, so a tag and the manifest can disagree.
-- The wasm side module is 799 KB and almost all of it is std, for a module
-  that holds no implementation. Making `hl_abi` `no_std` would cut most of it.
-
-## Not planned
-
-hxsl translation, a Heaps driver, SPIR-V ingestion, and ray queries. Each is
-its own piece of work and none of it belongs in this library.
+- Keep hlwgpu pinned to one xgpu revision for `xgpu-core`, `xgpu-backend`, and
+  `xgpu-bindgen`.
+- Regenerate and commit `haxe/gpu` whenever that pin changes.
+- Keep the haxelib version and a versioned release tag aligned.
+- Treat `crates/hlwgpu/spec/webgpu.idl` as legacy input only; xgpu's vendored
+  IDL is canonical.

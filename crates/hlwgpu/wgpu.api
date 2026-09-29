@@ -1,26 +1,21 @@
-# The hlwgpu interface. One declaration; every side is generated from it.
+# LEGACY native compatibility declaration.
 #
-#   scripts/gen_native_lib.py crates/hlwgpu/wgpu.api
+# The public `gpu` package, browser agent, and reusable backend are generated
+# by xgpu. This file remains only for native symbols used while the original
+# implementation is retired; do not add public API here.
 #
-# A `prim` line is the whole contract for one primitive: the name the Haxe
-# side asks for, its arguments and its return. The `js` line under it is that
-# primitive's body in a page, an expression with the arguments in scope plus
-# `H`, the prelude's handle table. Rust bodies are not declared because they
-# are `imp::<name>` by convention, and a mismatch is a link error.
+# `build.rs` and `hl_native_gen` read the `prim` declarations to generate the
+# native resolver shims in OUT_DIR. Rust bodies are `imp::<name>` by convention,
+# and a mismatch is a link error. The `js` lines are historical input; the
+# shipped browser implementation comes from xgpu.
 #
 # Types: i32, bool, bytes, void.
 
 library wgpu
 prefix hlwgpu_
 
-# `TextureFormat`, `VertexFormat`, `Limit`, `BufferUsage` and `TextureUsage`
-# are still written out by hand in three places -- the Haxe enum, the name
-# arrays in `js/prelude.js`, and the match in `src/imp.rs`. Adding a value
-# means all three. They should follow the ones below and be generated.
-#
-# Enumerations come from the WebGPU IDL: its values, in its order, so nothing
-# here is typed out and nothing can drift from the spec. The number that
-# crosses is the index.
+# This local IDL reference is retained for the legacy generator. xgpu owns the
+# canonical public enums and their WebGPU IDL mapping.
 idl spec/webgpu.idl
 
 enum GPUBlendFactor BlendFactor
@@ -35,7 +30,8 @@ enum GPUStencilOperation StencilOperation
 # The kinds of object a handle can name, numbered in this order from 1. The
 # number is carried in the handle so that a buffer used where a texture
 # belongs is refused rather than reading a real object of the wrong type.
-# Rust and JavaScript both get this list from here; neither writes it out.
+# The legacy Rust generator still reads this list. xgpu defines the object
+# kinds used by the public API and browser implementation.
 kinds instance adapter device queue buffer texture view sampler shader bindgroup pipeline renderpipeline encoder surface builder
 
 # -- instance ---------------------------------------------------------------

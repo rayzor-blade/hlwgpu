@@ -47,10 +47,9 @@ jobs:
       - name: Clippy, wasm
         run: cargo clippy -p hlwgpu --target wasm32-wasip1 --no-default-features -- -D warnings
 
-      # `build.rs` writes the Haxe externs, the JavaScript and IMPORTS.md into
-      # the tree, and they are committed because the people who need them are
-      # not building the Rust. If a declaration changed without them, someone
-      # is reading a stale extern.
+      # `build.rs` writes xgpu's generated Haxe externs into the tree. They
+      # are committed because application developers do not build the Rust
+      # generator. A diff means the xgpu pin and public package have drifted.
       - name: The generated files are the ones committed
         run: |
           cargo build --workspace

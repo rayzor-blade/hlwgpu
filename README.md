@@ -6,16 +6,32 @@
 [![release](https://github.com/rayzor-blade/hlwgpu/actions/workflows/release.yml/badge.svg)](https://github.com/rayzor-blade/hlwgpu/actions/workflows/release.yml)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-WebGPU for Haxe applications running on Ash and HashLink. hlwgpu packages the
-shared [xgpu](https://github.com/rayzor-blade/xgpu) API as generated Haxe
-externs and a native `xgpu.hdll` backed by Rust and wgpu.
+hlwgpu packages the shared [xgpu](https://github.com/rayzor-blade/xgpu)
+API for Haxe programs on Ash and HashLink. Native programs call `xgpu.hdll`,
+which uses Rust and wgpu. Browser programs load the supplied `xgpu.wasm` side
+module and WebGPU agent through their runtime's Wasm harness.
 
-## Use it
+## Install
 
-Download the release for your platform, add the unpacked directory as a
-Haxelib, and keep `xgpu.hdll` beside the HashLink program. The release already
-contains the generated Haxe files; application developers do not need Rust or
-a binding generator.
+Download the archive for your platform from
+[GitHub Releases](https://github.com/rayzor-blade/hlwgpu/releases), unpack it,
+and register that directory as the `hlwgpu` haxelib. Keep `xgpu.hdll` beside
+your HashLink bytecode or executable.
+
+```sh
+haxelib dev hlwgpu /path/to/unpacked/hlwgpu
+```
+
+Add `-lib hlwgpu` to your Haxe build. The archive already contains the
+generated API, so application developers do not need Rust, WebIDL tooling, or
+xgpu's generator.
+
+The generated API uses `ash.Future<T>` for asynchronous results. Ash provides
+the matching runtime ABI. A different HashLink host can use the same hdll when
+it provides the Ash Future ABI described by the
+[ash-future package](https://github.com/rayzor-blade/ash/tree/main/haxelib/ash-future).
+
+## First device
 
 ```haxe
 import gpu.GpuInstance;
@@ -24,29 +40,29 @@ import gpu.Power;
 var instance = new GpuInstance();
 var adapter = instance.requestAdapter(Power.HighPerformance).await();
 var device = adapter.requestDevice().await();
+trace('${adapter.name()} through ${adapter.backend()}');
 ```
 
-Asynchronous GPU operations return `ash.Future<T>`. Handles expose `destroy()`
-when their native resource can be released explicitly.
+GPU work that completes later returns `ash.Future<T>`. `await()` parks an Ash
+fiber; `then()` attaches a continuation. GPU resources expose `destroy()` so
+applications can release driver memory at a predictable point.
 
-The public Haxelib class path has two namespaces:
+The haxelib exposes two namespaces:
 
-- `gpu` is the generated xgpu API.
-- `hlwgpu.hxsl` compiles typed HXSL shaders to WGSL.
+- `gpu` is xgpu's generated portable WebGPU API plus native extensions.
+- `hlwgpu.hxsl` compiles typed HXSL shaders to WGSL during Haxe compilation.
 
 Use the official [WebGPU specification](https://www.w3.org/TR/webgpu/) as the
-API reference for the portable `gpu` surface. hlwgpu also exposes xgpu's
-native extensions where the selected backend supports them.
-
-hlwgpu follows the WebGPU IDL snapshot pinned by xgpu. A release therefore
-identifies that API snapshot as well as the adapter binaries; hlwgpu does not
-maintain a separate GPU API version.
+reference for portable behavior. Native-only capabilities such as backend
+selection, pipeline caches, mesh shaders, ray tracing, and passthrough shaders
+are described by their generated classes and are available only where the
+selected wgpu backend supports them.
 
 ## Typed shaders
 
 Implement `hlwgpu.hxsl.Shader` and put the shader expression in `SRC`. The
-macro checks it during Haxe compilation and emits WGSL plus its buffer and
-binding layout.
+macro checks it during Haxe compilation and emits WGSL plus its resource and
+pipeline layout constants.
 
 ```haxe
 class TriangleShader implements hlwgpu.hxsl.Shader {
@@ -68,35 +84,40 @@ class TriangleShader implements hlwgpu.hxsl.Shader {
 var shader = device.createShader(TriangleShader.WGSL);
 ```
 
-`TriangleShader.WGSL` contains the generated shader. The macro also emits byte
-offsets, bind groups, bindings, vertex locations, render targets, and pipeline
-constant keys as static fields.
+`TriangleShader.WGSL` contains the generated shader. The macro also emits
+uniform offsets, bind groups, bindings, vertex locations, render targets, and
+pipeline constant keys as static fields.
 
-## Platforms
+## Releases
 
-| Platform | Backend |
+| Archive | Intended use |
 |---|---|
-| macOS and iOS | Metal |
-| Windows | D3D12, with a Vulkan release variant |
-| Linux | Vulkan |
-| Android | Vulkan, falling back to OpenGL ES |
-| Browser Wasm | Browser WebGPU through Ash's side-module and agent harness |
+| `hlwgpu-hdll-<platform>` | Desktop `xgpu.hdll`, generated Haxe API, and haxelib manifest |
+| `hlwgpu-ios-*` / `hlwgpu-android-*` | Static native archive for a mobile runtime integration |
+| `hlwgpu-wasm-ash` | `xgpu.wasm`, runtime-neutral loader entry, and Ash browser agent modules |
+| `hlwgpu-haxe` | Generated Haxe API without a platform binary |
 
-Native release archives contain `xgpu.hdll` and the generated Haxe sources.
-The Wasm archive contains `xgpu.wasm`, the runtime-neutral `hlwgpu.js` entry,
-and the Ash browser agent modules. `hlwgpu.js` exposes the side-module URL and
-accepts any runtime's dylink loader. Ash owns its browser page, loader, shared
-memory, and isolation headers around the supplied agent files.
+Native backends are Metal on Apple platforms, D3D12 on Windows, and Vulkan on
+Linux. The dedicated Windows Vulkan archive enables Vulkan as another runtime
+choice. Android builds include Vulkan and OpenGL ES. Browser Wasm uses the
+browser's WebGPU implementation.
 
-A fresh archive is published under the moving `nightly` release each day.
-Versioned releases follow the WebGPU IDL snapshot pinned by xgpu.
+The moving `nightly` release is rebuilt on the daily schedule. Versioned
+releases follow the WebGPU IDL snapshot pinned by xgpu.
 
-## Contributing
+The Wasm archive is an integration package rather than a standalone JS
+library. `xgpu.wasm` is a position-independent side module that shares the
+program's memory and table. See [the host contract](crates/hlwgpu/IMPORTS.md)
+for the runtime imports and supplied JavaScript modules.
 
-xgpu owns the API model, WebIDL input, generator, and reusable backend. hlwgpu
-owns the HashLink ABI adapter, release packaging, and HXSL-to-WGSL support.
-Generated files under `haxe/gpu` carry a generated-file header and are checked
-in so releases and source checkouts expose the same API.
+## More documentation
 
-`crates/hlwindow` is an internal native test helper. It is not part of the
-public Haxelib or release class path.
+- [Using hlwgpu](docs/using.md)
+- [Architecture](docs/design.md)
+- [Current status and remaining work](docs/backlog.md)
+- [HXSL to WGSL](haxe/hlwgpu/hxsl/README.md)
+
+xgpu owns the API model, WebIDL input, generator, and reusable wgpu backend.
+hlwgpu owns the HashLink ABI adapter, release packaging, and HXSL compiler.
+`crates/hlwindow` is an internal test helper and is not shipped as the public
+window library.
