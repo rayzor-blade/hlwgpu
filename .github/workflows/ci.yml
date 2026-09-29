@@ -45,7 +45,7 @@ jobs:
       # The wasm side of the library holds no implementation, so nothing above
       # compiles it. A mistake in the forwarding shim only shows here.
       - name: Clippy, wasm
-        run: cargo clippy -p hlwgpu --target wasm32-wasip1 --no-default-features -- -D warnings
+        run: cargo clippy -p hlwgpu --target wasm32-wasip1 -- -D warnings
 
       # `build.rs` writes xgpu's generated Haxe externs into the tree. They
       # are committed because application developers do not build the Rust

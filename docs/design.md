@@ -84,13 +84,6 @@ window and display handles supplied by the application or a window library.
 `crates/hlwindow` exists for repository tests only. Browser presentation uses
 the canvas owned by the runtime harness.
 
-## Legacy native implementation
-
-`wgpu.api`, `src/imp.rs`, and `hl_native_gen` predate xgpu. They remain inside
-the native library while compatibility code is retired, but they no longer
-define the public Haxe API or browser implementation. The canonical API,
-WebIDL snapshot, enum catalog, and reusable backend all live in xgpu.
-
 ## Validation
 
 CI checks the Rust workspace, type-checks the generated `gpu` package, runs

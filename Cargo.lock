@@ -593,7 +593,6 @@ version = "0.1.0"
 dependencies = [
  "ash_future_abi",
  "hl_abi 0.1.0 (git+https://github.com/rayzor-blade/hl_abi)",
- "hl_native_gen",
  "libloading",
  "pollster",
  "raw-window-handle",

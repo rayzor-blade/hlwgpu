@@ -56,7 +56,7 @@ jobs:
             libxkbcommon-dev libwayland-dev libx11-dev libxrandr-dev \
             libxi-dev libxcursor-dev
 
-      # MSVC will not leave a symbol undefined in a DLL, so wgpu.hdll has to
+      # MSVC will not leave a symbol undefined in a DLL, so xgpu.hdll has to
       # be linked against the VM's import library. Only the VM is built; its
       # optional libraries want SDL and the rest, and cmake looks for those
       # while configuring.

@@ -1,15 +1,12 @@
 //! WebGPU for HashLink.
 //!
-//! Natively this crate is `wgpu.hdll`: it holds the implementation and
-//! the VM calls straight into it, so it loads in upstream HashLink too. Built
-//! for wasm it is `xgpu.wasm`: an Ash-compatible side module whose primitives
-//! send WebGPU commands to a runtime-owned browser agent. `IMPORTS.md` is the
-//! host contract.
-//!
-//! Every side but the implementation comes from `wgpu.api`; see `build.rs`.
+//! Natively this crate builds `xgpu.hdll`, which runs xgpu's wgpu backend.
+//! For wasm it builds `xgpu.wasm`, an Ash-compatible side module whose
+//! primitives send WebGPU commands to a runtime-owned browser agent.
+//! `IMPORTS.md` is the host contract.
 
-// wgpu's types nest deeply enough that proving `Slab<wgpu::Instance>: Send`
-// overflows the default limit of 128.
+// The generated xgpu backend's wgpu types nest deeply enough to exceed the
+// default recursion limit of 128.
 #![recursion_limit = "256"]
 #![allow(unsafe_op_in_unsafe_fn)]
 #![cfg_attr(
@@ -26,19 +23,8 @@ static ALLOCATOR: hl_abi::ProgramAllocator = hl_abi::ProgramAllocator;
 // libc calls, so it owns the otherwise-unused slot.
 #[cfg(target_family = "wasm")]
 #[unsafe(no_mangle)]
-#[thread_local]
+#[cfg_attr(target_feature = "atomics", thread_local)]
 static mut errno: i32 = 0;
 
-#[cfg(not(target_family = "wasm"))]
-mod bindings;
-// Public: the host crate implementing the wasm imports reuses this.
-#[cfg(not(target_family = "wasm"))]
-pub mod handles;
-
-#[cfg(feature = "native")]
-mod imp;
-
-/// The complete xgpu surface for Ash programs. The original `wgpu` package
-/// remains available while applications migrate; both share wgpu but keep
-/// independent handle tables so their ABI contracts cannot be confused.
+/// The xgpu surface for Ash and HashLink programs.
 mod xgpu;

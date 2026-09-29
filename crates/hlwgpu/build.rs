@@ -1,6 +1,4 @@
 fn main() {
-    hl_native_gen::generate_backend("wgpu.api").expect("generating the wgpu bindings");
-
     let out = std::path::PathBuf::from(std::env::var_os("OUT_DIR").unwrap());
     xgpu_backend::install_scoped(&out, "crate::xgpu").expect("installing the shared xgpu backend");
     let api = xgpu_bindgen::gpu_api();

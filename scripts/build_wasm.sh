@@ -27,7 +27,7 @@ HLWGPU_WASM_JS_OUT="$out" \
 CARGO_PROFILE_RELEASE_LTO=false \
 RUSTFLAGS="-C relocation-model=pic -C target-feature=+mutable-globals -C panic=abort" \
   cargo +nightly rustc -p hlwgpu --lib --crate-type staticlib \
-    --target wasm32-wasip1-threads --no-default-features --release \
+    --target wasm32-wasip1-threads --release \
     -Z build-std=std,panic_abort
 
 lld=$(find "$(rustc +nightly --print sysroot)/lib/rustlib" -name rust-lld -type f | head -1)

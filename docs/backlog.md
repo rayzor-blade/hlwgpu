@@ -32,13 +32,6 @@ checks an asynchronous failure path.
 `IMPORTS.md` specifies the ABI. A small conformance harness should verify a
 non-Ash loader against the same mailbox and Future behavior.
 
-### Remove the legacy implementation
-
-The old `wgpu.api`, `src/imp.rs`, native bindings, local handle table, and
-`hl_native_gen` remain for compatibility during the xgpu migration. Once no
-consumer needs their symbols, remove them so `xgpu.hdll` contains one object
-model and one generated binding pipeline.
-
 ### Package the Future dependency
 
 Ash already provides the Future ABI. The release story for a program launched
@@ -57,5 +50,4 @@ selection, resource lifetime, and async completion are exercised as well.
   `xgpu-bindgen`.
 - Regenerate and commit `haxe/gpu` whenever that pin changes.
 - Keep the haxelib version and a versioned release tag aligned.
-- Treat `crates/hlwgpu/spec/webgpu.idl` as legacy input only; xgpu's vendored
-  IDL is canonical.
+- Use xgpu's vendored WebGPU IDL as the canonical API input.
