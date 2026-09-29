@@ -99,6 +99,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ash_future_abi"
+version = "0.1.0"
+source = "git+https://github.com/rayzor-blade/ash.git?rev=ac80cdb17c9fe82a0e86ab893e9d7304d5319fe6#ac80cdb17c9fe82a0e86ab893e9d7304d5319fe6"
+dependencies = [
+ "hl_abi 0.1.0 (git+https://github.com/rayzor-blade/hl_abi?rev=5482332e64fbdb8ae65e559c62eb320a95bd3d16)",
+]
+
+[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -568,6 +576,11 @@ checksum = "e17592d60ebacc7d5e169f4663c5f84f9161cc90328abcfe8456f41e4dfcb284"
 [[package]]
 name = "hl_abi"
 version = "0.1.0"
+source = "git+https://github.com/rayzor-blade/hl_abi?rev=5482332e64fbdb8ae65e559c62eb320a95bd3d16#5482332e64fbdb8ae65e559c62eb320a95bd3d16"
+
+[[package]]
+name = "hl_abi"
+version = "0.1.0"
 source = "git+https://github.com/rayzor-blade/hl_abi#78c5c70d3da5aedc5b1d4550c73e2d3b591c18a5"
 
 [[package]]
@@ -578,18 +591,23 @@ version = "0.1.0"
 name = "hlwgpu"
 version = "0.1.0"
 dependencies = [
- "hl_abi",
+ "ash_future_abi",
+ "hl_abi 0.1.0 (git+https://github.com/rayzor-blade/hl_abi)",
  "hl_native_gen",
+ "libloading",
  "pollster",
  "raw-window-handle",
  "wgpu",
+ "xgpu-backend",
+ "xgpu-bindgen",
+ "xgpu-core",
 ]
 
 [[package]]
 name = "hlwindow"
 version = "0.1.0"
 dependencies = [
- "hl_abi",
+ "hl_abi 0.1.0 (git+https://github.com/rayzor-blade/hl_abi)",
  "hl_native_gen",
  "raw-window-handle",
  "winit",
@@ -784,6 +802,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "minimal-lexical"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
+
+[[package]]
 name = "naga"
 version = "30.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -849,6 +873,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
  "jni-sys 0.3.1",
+]
+
+[[package]]
+name = "nom"
+version = "7.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
+dependencies = [
+ "memchr",
+ "minimal-lexical",
 ]
 
 [[package]]
@@ -2000,6 +2034,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "weedle2"
+version = "5.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "998d2c24ec099a87daf9467808859f9d82b61f1d9c9701251aea037f514eae0e"
+dependencies = [
+ "nom",
+]
+
+[[package]]
 name = "wgpu"
 version = "30.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2485,6 +2528,28 @@ name = "xcursor"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "163b33ed8786455e2fa5d72f554057ce3f3182425434f756cd39c99839d88e23"
+
+[[package]]
+name = "xgpu-backend"
+version = "0.1.0"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a#4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a"
+
+[[package]]
+name = "xgpu-bindgen"
+version = "0.1.0"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a#4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+ "weedle2",
+ "wgpu-types",
+]
+
+[[package]]
+name = "xgpu-core"
+version = "0.1.0"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a#4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a"
 
 [[package]]
 name = "xkbcommon-dl"

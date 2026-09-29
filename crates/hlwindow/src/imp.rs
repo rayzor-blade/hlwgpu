@@ -43,7 +43,12 @@ impl ApplicationHandler for App {
         }
     }
 
-    fn window_event(&mut self, _: &ActiveEventLoop, _: winit::window::WindowId, event: WindowEvent) {
+    fn window_event(
+        &mut self,
+        _: &ActiveEventLoop,
+        _: winit::window::WindowId,
+        event: WindowEvent,
+    ) {
         match event {
             WindowEvent::CloseRequested => self.events |= CLOSED,
             WindowEvent::Resized(_) => self.events |= RESIZED,
@@ -72,7 +77,10 @@ fn with<T>(handle: i32, miss: T, body: impl FnOnce(&mut Open) -> T) -> T {
         if index < 0 {
             return miss;
         }
-        match windows.get_mut(index as usize).and_then(|slot| slot.as_mut()) {
+        match windows
+            .get_mut(index as usize)
+            .and_then(|slot| slot.as_mut())
+        {
             Some(open) => body(open),
             None => miss,
         }
@@ -102,7 +110,11 @@ pub unsafe fn open(title: *mut vbyte, width: i32, height: i32) -> i32 {
 
     let mut open = Open {
         event_loop,
-        app: App { attributes, window: None, events: 0 },
+        app: App {
+            attributes,
+            window: None,
+            events: 0,
+        },
     };
 
     // winit creates windows in `resumed`, so the loop has to run before there
@@ -138,13 +150,19 @@ pub unsafe fn poll(handle: i32) -> i32 {
 
 pub unsafe fn width(handle: i32) -> i32 {
     with(handle, 0, |open| {
-        open.app.window.as_ref().map_or(0, |w| w.inner_size().width as i32)
+        open.app
+            .window
+            .as_ref()
+            .map_or(0, |w| w.inner_size().width as i32)
     })
 }
 
 pub unsafe fn height(handle: i32) -> i32 {
     with(handle, 0, |open| {
-        open.app.window.as_ref().map_or(0, |w| w.inner_size().height as i32)
+        open.app
+            .window
+            .as_ref()
+            .map_or(0, |w| w.inner_size().height as i32)
     })
 }
 

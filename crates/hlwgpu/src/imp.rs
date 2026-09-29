@@ -11,9 +11,9 @@ use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 
-use hl_abi::{hl_alloc_bytes, vbyte};
 use crate::bindings::kinds::Kind;
 use crate::handles::{kind_of, PendingRequests, Slab};
+use hl_abi::{hl_alloc_bytes, vbyte};
 
 /// A device and the queue that came back with it.
 struct DeviceEntry {
@@ -122,9 +122,8 @@ unsafe fn ucs2_in(bytes: *const vbyte) -> String {
 pub unsafe fn instance_create() -> i32 {
     // `with_env` honours WGPU_BACKEND and the rest, so a program built with
     // more than one backend can be told which to use without an API for it.
-    let instance = wgpu::Instance::new(
-        wgpu::InstanceDescriptor::new_without_display_handle().with_env(),
-    );
+    let instance =
+        wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle().with_env());
     INSTANCES.lock().unwrap().put(instance)
 }
 
@@ -213,22 +212,23 @@ pub unsafe fn request_result(request: i32) -> i32 {
 
 pub unsafe fn device_request(adapter: i32) -> i32 {
     let adapter = find!(ADAPTERS, adapter, 0);
-    let handle = match pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor::default()))
-    {
-        Ok((device, queue)) => {
-            let errors: Arc<Mutex<VecDeque<String>>> = Arc::default();
-            let reported = errors.clone();
-            device.on_uncaptured_error(Arc::new(move |error: wgpu::Error| {
-                reported.lock().unwrap().push_back(error.to_string());
-            }));
-            let queue = QUEUES.lock().unwrap().put(queue);
-            DEVICES
-                .lock()
-                .unwrap()
-                .put(DeviceEntry { device, queue, errors })
-        }
-        Err(_) => 0,
-    };
+    let handle =
+        match pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor::default())) {
+            Ok((device, queue)) => {
+                let errors: Arc<Mutex<VecDeque<String>>> = Arc::default();
+                let reported = errors.clone();
+                device.on_uncaptured_error(Arc::new(move |error: wgpu::Error| {
+                    reported.lock().unwrap().push_back(error.to_string());
+                }));
+                let queue = QUEUES.lock().unwrap().put(queue);
+                DEVICES.lock().unwrap().put(DeviceEntry {
+                    device,
+                    queue,
+                    errors,
+                })
+            }
+            Err(_) => 0,
+        };
     REQUESTS.lock().unwrap().settled(handle)
 }
 
@@ -326,10 +326,12 @@ pub unsafe fn buffer_destroy(buffer: i32) {
 pub unsafe fn shader_create(device: i32, wgsl: *mut vbyte) -> i32 {
     let entry = find!(DEVICES, device, 0);
     let source = ucs2_in(wgsl);
-    let module = entry.device.create_shader_module(wgpu::ShaderModuleDescriptor {
-        label: None,
-        source: wgpu::ShaderSource::Wgsl(source.into()),
-    });
+    let module = entry
+        .device
+        .create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: None,
+            source: wgpu::ShaderSource::Wgsl(source.into()),
+        });
     SHADERS.lock().unwrap().put(module)
 }
 
@@ -394,7 +396,9 @@ pub unsafe fn bind_group_create(
         // binds as -- and a wrong handle is refused here rather than bound as
         // whatever it happens to overlap.
         let one = match kind_of(*handle) {
-            k if k == Kind::Buffer as i32 => BUFFERS.lock().unwrap().get(*handle).map(Bound::Buffer),
+            k if k == Kind::Buffer as i32 => {
+                BUFFERS.lock().unwrap().get(*handle).map(Bound::Buffer)
+            }
             k if k == Kind::View as i32 => VIEWS.lock().unwrap().get(*handle).map(Bound::View),
             k if k == Kind::Sampler as i32 => {
                 SAMPLERS.lock().unwrap().get(*handle).map(Bound::Sampler)
@@ -439,25 +443,20 @@ pub unsafe fn encoder_create(device: i32) -> i32 {
     let encoder = entry
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-    ENCODERS
-        .lock()
-        .unwrap()
-        .put(Mutex::new(EncoderEntry { encoder: Some(encoder), ..Default::default() }))
+    ENCODERS.lock().unwrap().put(Mutex::new(EncoderEntry {
+        encoder: Some(encoder),
+        ..Default::default()
+    }))
 }
 
-pub unsafe fn encoder_compute(
-    encoder: i32,
-    pipeline: i32,
-    bindgroup: i32,
-    x: i32,
-    y: i32,
-    z: i32,
-) {
+pub unsafe fn encoder_compute(encoder: i32, pipeline: i32, bindgroup: i32, x: i32, y: i32, z: i32) {
     let encoder = find!(ENCODERS, encoder);
     let pipeline = find!(PIPELINES, pipeline);
     let bind_group = find!(BINDGROUPS, bindgroup);
     let mut held = encoder.lock().unwrap();
-    let Some(encoder) = held.encoder.as_mut() else { return };
+    let Some(encoder) = held.encoder.as_mut() else {
+        return;
+    };
 
     let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
         label: None,
@@ -480,7 +479,9 @@ pub unsafe fn encoder_copy_buffer(
     let source = find!(BUFFERS, src);
     let target = find!(BUFFERS, dst);
     let mut held = encoder.lock().unwrap();
-    let Some(encoder) = held.encoder.as_mut() else { return };
+    let Some(encoder) = held.encoder.as_mut() else {
+        return;
+    };
     encoder.copy_buffer_to_buffer(
         &source,
         src_offset.max(0) as u64,
@@ -637,7 +638,9 @@ pub unsafe fn pass_begin(encoder: i32) {
         .collect();
 
     let pass = {
-        let Some(encoder) = held.encoder.as_mut() else { return };
+        let Some(encoder) = held.encoder.as_mut() else {
+            return;
+        };
         encoder
             .begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
@@ -766,7 +769,9 @@ pub unsafe fn encoder_copy_buffer_to_texture(
     let buffer = find!(BUFFERS, buffer);
     let texture = find!(TEXTURES, texture);
     let mut held = entry.lock().unwrap();
-    let Some(encoder) = held.encoder.as_mut() else { return };
+    let Some(encoder) = held.encoder.as_mut() else {
+        return;
+    };
     encoder.copy_buffer_to_texture(
         wgpu::TexelCopyBufferInfo {
             buffer: &buffer,
@@ -792,7 +797,9 @@ pub unsafe fn encoder_copy_texture_to_texture(
     let source = find!(TEXTURES, src);
     let target = find!(TEXTURES, dst);
     let mut held = entry.lock().unwrap();
-    let Some(encoder) = held.encoder.as_mut() else { return };
+    let Some(encoder) = held.encoder.as_mut() else {
+        return;
+    };
     encoder.copy_texture_to_texture(
         whole_texture(&source),
         whole_texture(&target),
@@ -804,12 +811,10 @@ pub unsafe fn encoder_clear_buffer(encoder: i32, buffer: i32, offset: i32, size:
     let entry = find!(ENCODERS, encoder);
     let buffer = find!(BUFFERS, buffer);
     let mut held = entry.lock().unwrap();
-    let Some(encoder) = held.encoder.as_mut() else { return };
-    encoder.clear_buffer(
-        &buffer,
-        offset.max(0) as u64,
-        Some(size.max(0) as u64),
-    );
+    let Some(encoder) = held.encoder.as_mut() else {
+        return;
+    };
+    encoder.clear_buffer(&buffer, offset.max(0) as u64, Some(size.max(0) as u64));
 }
 
 pub unsafe fn encoder_copy_texture_to_buffer(
@@ -824,7 +829,9 @@ pub unsafe fn encoder_copy_texture_to_buffer(
     let texture = find!(TEXTURES, texture);
     let buffer = find!(BUFFERS, buffer);
     let mut held = entry.lock().unwrap();
-    let Some(encoder) = held.encoder.as_mut() else { return };
+    let Some(encoder) = held.encoder.as_mut() else {
+        return;
+    };
     encoder.copy_texture_to_buffer(
         wgpu::TexelCopyTextureInfo {
             texture: &texture,
@@ -969,7 +976,10 @@ unsafe fn raw_handles(
     wb: i64,
     da: i64,
     db: i64,
-) -> Option<(raw_window_handle::RawDisplayHandle, raw_window_handle::RawWindowHandle)> {
+) -> Option<(
+    raw_window_handle::RawDisplayHandle,
+    raw_window_handle::RawWindowHandle,
+)> {
     use raw_window_handle as rwh;
     use std::ffi::c_void;
     use std::ptr::NonNull;
@@ -1034,10 +1044,11 @@ pub unsafe fn surface_create(
         raw_window_handle: window,
     });
     match made {
-        Ok(surface) => SURFACES
-            .lock()
-            .unwrap()
-            .put(Mutex::new(SurfaceEntry { surface, frame: None, view: 0 })),
+        Ok(surface) => SURFACES.lock().unwrap().put(Mutex::new(SurfaceEntry {
+            surface,
+            frame: None,
+            view: 0,
+        })),
         Err(_) => 0,
     }
 }
@@ -1128,7 +1139,11 @@ struct PipelineBuild {
     vertex_entry: String,
     fragment_entry: String,
     buffers: Vec<(u64, wgpu::VertexStepMode, Vec<wgpu::VertexAttribute>)>,
-    targets: Vec<(wgpu::TextureFormat, wgpu::ColorWrites, Option<wgpu::BlendState>)>,
+    targets: Vec<(
+        wgpu::TextureFormat,
+        wgpu::ColorWrites,
+        Option<wgpu::BlendState>,
+    )>,
     depth: Option<(wgpu::TextureFormat, bool, wgpu::CompareFunction)>,
     stencil: Option<wgpu::StencilState>,
     primitive: wgpu::PrimitiveState,
@@ -1241,10 +1256,10 @@ pub unsafe fn pipeline_begin(device: i32) -> i32 {
     if DEVICES.lock().unwrap().get(device).is_none() {
         return 0;
     }
-    BUILDERS
-        .lock()
-        .unwrap()
-        .put(Mutex::new(PipelineBuild { device, ..Default::default() }))
+    BUILDERS.lock().unwrap().put(Mutex::new(PipelineBuild {
+        device,
+        ..Default::default()
+    }))
 }
 
 /// Runs `body` on a builder, or does nothing.
@@ -1298,9 +1313,7 @@ pub unsafe fn pipeline_attribute_packed(builder: i32, format: i32) {
             .map(|(_, _, attributes)| attributes.len())
             .sum::<usize>() as u32;
         if let Some((_, _, attributes)) = build.buffers.last_mut() {
-            let offset = attributes
-                .last()
-                .map_or(0, |a| a.offset + a.format.size());
+            let offset = attributes.last().map_or(0, |a| a.offset + a.format.size());
             attributes.push(wgpu::VertexAttribute {
                 format: vertex_format(format),
                 offset,
@@ -1419,8 +1432,7 @@ pub unsafe fn render_pipeline_build(builder: i32) -> i32 {
             attributes,
         })
         .collect();
-    let buffers: Vec<Option<wgpu::VertexBufferLayout>> =
-        layouts.into_iter().map(Some).collect();
+    let buffers: Vec<Option<wgpu::VertexBufferLayout>> = layouts.into_iter().map(Some).collect();
     let targets: Vec<Option<wgpu::ColorTargetState>> = build
         .targets
         .iter()
@@ -1568,7 +1580,9 @@ pub unsafe fn encoder_compute_indirect(
     let bind_group = find!(BINDGROUPS, bindgroup);
     let buffer = find!(BUFFERS, buffer);
     let mut held = encoder.lock().unwrap();
-    let Some(encoder) = held.encoder.as_mut() else { return };
+    let Some(encoder) = held.encoder.as_mut() else {
+        return;
+    };
 
     let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
         label: None,

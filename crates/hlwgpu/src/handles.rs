@@ -38,7 +38,12 @@ pub struct Slab<T> {
 
 impl<T> Slab<T> {
     pub const fn new(kind: Kind) -> Self {
-        Slab { kind, obj: Vec::new(), generation: Vec::new(), free: VecDeque::new() }
+        Slab {
+            kind,
+            obj: Vec::new(),
+            generation: Vec::new(),
+            free: VecDeque::new(),
+        }
     }
 
     /// Stores `value`; 0 if this kind is full.
@@ -75,7 +80,9 @@ impl<T> Slab<T> {
     /// Releases a handle. Doing it twice does nothing: ash runs no finalizer,
     /// so `destroy()` is the only path and has to tolerate being repeated.
     pub fn remove(&mut self, handle: i32) {
-        let Some(index) = self.slot(handle) else { return };
+        let Some(index) = self.slot(handle) else {
+            return;
+        };
         if self.obj[index].take().is_some() {
             self.free.push_back(index);
         }
@@ -119,7 +126,10 @@ pub struct PendingRequests {
 
 impl Default for PendingRequests {
     fn default() -> Self {
-        PendingRequests { next: 1, slots: HashMap::new() }
+        PendingRequests {
+            next: 1,
+            slots: HashMap::new(),
+        }
     }
 }
 
@@ -135,7 +145,11 @@ impl PendingRequests {
 
     /// An id for work in flight. `done` is what the callback sets.
     pub fn waiting(&mut self, done: Arc<AtomicBool>, result: Arc<AtomicI32>, device: i32) -> i32 {
-        self.add(PendingRequest { done, result, device })
+        self.add(PendingRequest {
+            done,
+            result,
+            device,
+        })
     }
 
     fn add(&mut self, request: PendingRequest) -> i32 {
@@ -146,7 +160,9 @@ impl PendingRequests {
     }
 
     pub fn ready(&self, id: i32) -> bool {
-        self.slots.get(&id).is_some_and(|r| r.done.load(Ordering::Acquire))
+        self.slots
+            .get(&id)
+            .is_some_and(|r| r.done.load(Ordering::Acquire))
     }
 
     /// The device to poll before asking again, or 0.
@@ -212,7 +228,10 @@ mod tests {
         let mut buffers = slab();
         let h = buffers.put(7);
         let textures: Slab<i32> = Slab::new(Kind::Texture);
-        assert!(textures.get(h).is_none(), "kind is checked, not just the slot");
+        assert!(
+            textures.get(h).is_none(),
+            "kind is checked, not just the slot"
+        );
     }
 
     #[test]

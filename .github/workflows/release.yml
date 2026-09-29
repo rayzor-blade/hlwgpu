@@ -72,15 +72,16 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          cargo build --release --target ${{ matrix.target }} -p hlwgpu -p hlwindow \
+          cargo build --release --target ${{ matrix.target }} -p hlwgpu \
             ${{ matrix.features && format('--features {0}', matrix.features) || '' }}
 
       - name: Name them as HashLink expects
         shell: bash
         run: |
           mkdir -p out
-          cp "target/${{ matrix.target }}/release/${{ matrix.built }}hlwgpu.${{ matrix.ext }}" out/wgpu.hdll
-          cp "target/${{ matrix.target }}/release/${{ matrix.built }}hlwindow.${{ matrix.ext }}" out/window.hdll
+          cp "target/${{ matrix.target }}/release/${{ matrix.built }}hlwgpu.${{ matrix.ext }}" out/xgpu.hdll
+          cp -r haxe out/
+          cp haxelib.json out/
           cp LICENSE README.md out/
           ls -la out
 
@@ -193,8 +194,7 @@ jobs:
       - name: Collect
         run: |
           mkdir -p out
-          cp -r crates/hlwgpu/haxe/wgpu out/
-          cp -r crates/hlwindow/haxe/window out/
+          cp -r haxe out/
           cp haxelib.json LICENSE README.md out/
 
       - uses: actions/upload-artifact@v4

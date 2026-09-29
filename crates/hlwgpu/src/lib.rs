@@ -18,3 +18,9 @@ pub mod handles;
 
 #[cfg(feature = "native")]
 mod imp;
+
+/// The complete xgpu surface for Ash programs. The original `wgpu` package
+/// remains available while applications migrate; both share wgpu but keep
+/// independent handle tables so their ABI contracts cannot be confused.
+#[cfg(feature = "native")]
+mod xgpu;

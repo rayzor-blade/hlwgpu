@@ -24,6 +24,8 @@ vulkan = ["wgpu/vulkan"]
 
 [build-dependencies]
 hl_native_gen = { workspace = true }
+xgpu-backend = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a" }
+xgpu-bindgen = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a" }
 
 # One backend each, the one the platform actually uses. wgpu will compile
 # every backend it is given and only some are gated out by target, so leaving
@@ -52,6 +54,9 @@ wgpu = { version = "30", optional = true, default-features = false, features = [
 
 [dependencies]
 hl_abi = { workspace = true }
+ash_future_abi = { git = "https://github.com/rayzor-blade/ash.git", rev = "ac80cdb17c9fe82a0e86ab893e9d7304d5319fe6" }
+xgpu-core = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "4837ce45a99c7d2bb3cf2c4c324aef8fd1a5638a" }
+libloading = "0.8"
 # Must resolve to the same version wgpu uses, or the handles are not its.
 raw-window-handle = { version = "0.6", optional = true }
 # Adapter enumeration is a future that is already resolved on every native

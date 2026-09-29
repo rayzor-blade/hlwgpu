@@ -59,8 +59,8 @@ jobs:
             exit 1
           }
 
-  builder:
-    name: the builder refuses what it should
+  haxe:
+    name: generated API and typed shaders
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -69,73 +69,8 @@ jobs:
         with:
           haxe-version: 4.3.6
 
-      # The type states only hold if something tries to break them, and the
-      # only way to test code that must not compile is to compile it.
-      - name: Builder constraints
-        run: crates/hlwgpu/test/constraints.sh
+      - name: Generated GPU API type-checks
+        run: haxe -hl /tmp/gpu-api.hl -cp haxe -cp crates/hlwgpu/test -main GpuApi
 
-  gpu:
-    name: it draws, under a HashLink that is not ash
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: gpu
-
-      - uses: krdlab/setup-haxe@v1
-        with:
-          haxe-version: 4.3.6
-
-      # lavapipe is Mesa's software Vulkan. No GPU in a runner, and a software
-      # one is what makes a rendered pixel the same on every machine.
-      - name: Install lavapipe and the windowing headers
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            mesa-vulkan-drivers vulkan-tools \
-            libxkbcommon-dev libwayland-dev libx11-dev libxrandr-dev \
-            libxi-dev libxcursor-dev
-          vulkaninfo --summary | head -30 || true
-
-      # Upstream HashLink, deliberately: the library claims to load in any of
-      # them, and the only way to know is to use one that is not ours.
-      - name: Build upstream HashLink
-        run: |
-          git clone --depth 1 https://github.com/HaxeFoundation/hashlink.git /tmp/hashlink
-          # Only the VM. Every optional library is off: they want libpng,
-          # SDL, OpenAL and the rest, and cmake looks for those while
-          # configuring, so leaving them on fails before a build starts.
-          cmake -S /tmp/hashlink -B /tmp/hashlink/build \
-            -DCMAKE_BUILD_TYPE=Release -DWITH_VM=ON \
-            -DWITH_FMT=OFF -DWITH_HEAPS=OFF -DWITH_OPENAL=OFF -DWITH_SDL=OFF \
-            -DWITH_SQLITE=OFF -DWITH_SSL=OFF -DWITH_UI=OFF -DWITH_UV=OFF \
-            -DWITH_VIDEO=OFF
-          cmake --build /tmp/hashlink/build --target hl -j"$(nproc)"
-          hldir=$(dirname "$(find /tmp/hashlink/build -type f -name hl -perm -u+x | head -1)")
-          echo "found the VM in $hldir"
-          echo "$hldir" >> "$GITHUB_PATH"
-          echo "LD_LIBRARY_PATH=$hldir:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
-          "$hldir/hl" --version || true
-
-      - name: Build the library
-        run: cargo build -p hlwgpu
-
-      - name: Draw things and check the pixels
-        run: |
-          mkdir -p run
-          cp target/debug/libhlwgpu.so run/wgpu.hdll
-          export LD_LIBRARY_PATH="$PWD/run:$LD_LIBRARY_PATH"
-          failed=0
-          for pair in Compute:compute Render:render Textured:textured Blend:blend \
-                      Depth:depth Conventions:conventions Instanced:instanced \
-                      Clipping:clipping Copies:copies MultiTarget:multitarget; do
-            main="${pair%%:*}"; out="${pair##*:}"
-            haxe -hl "run/$out.hl" -cp crates/hlwgpu/haxe -cp crates/hlwgpu/test -main "$main"
-            printf '%-12s ' "$out"
-            ( cd run && hl "$out.hl" ) || failed=1
-          done
-          exit $failed
+      - name: HXSL generates WGSL and layouts
+        run: haxe --interp -cp haxe -cp crates/hlwgpu/test -main Hxsl

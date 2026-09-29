@@ -53,14 +53,44 @@ struct Ty {
 
 fn ty(name: &str) -> Option<Ty> {
     Some(match name {
-        "i32" => Ty { letter: 'i', rust: "i32", haxe: "Int", wasm: "i32" },
-        "bool" => Ty { letter: 'b', rust: "bool", haxe: "Bool", wasm: "i32" },
-        "f64" => Ty { letter: 'd', rust: "f64", haxe: "Float", wasm: "f64" },
+        "i32" => Ty {
+            letter: 'i',
+            rust: "i32",
+            haxe: "Int",
+            wasm: "i32",
+        },
+        "bool" => Ty {
+            letter: 'b',
+            rust: "bool",
+            haxe: "Bool",
+            wasm: "i32",
+        },
+        "f64" => Ty {
+            letter: 'd',
+            rust: "f64",
+            haxe: "Float",
+            wasm: "f64",
+        },
         // For a pointer-sized value that has to survive the trip, such as a
         // raw window handle.
-        "i64" => Ty { letter: 'l', rust: "i64", haxe: "haxe.Int64", wasm: "i64" },
-        "bytes" => Ty { letter: 'B', rust: "*mut vbyte", haxe: "hl.Bytes", wasm: "i32" },
-        "void" => Ty { letter: 'v', rust: "()", haxe: "Void", wasm: "" },
+        "i64" => Ty {
+            letter: 'l',
+            rust: "i64",
+            haxe: "haxe.Int64",
+            wasm: "i64",
+        },
+        "bytes" => Ty {
+            letter: 'B',
+            rust: "*mut vbyte",
+            haxe: "hl.Bytes",
+            wasm: "i32",
+        },
+        "void" => Ty {
+            letter: 'v',
+            rust: "()",
+            haxe: "Void",
+            wasm: "",
+        },
         _ => return None,
     })
 }
@@ -144,7 +174,10 @@ fn parse(text: &str) -> Result<Decl, String> {
             let (Some(from), Some(name)) = (parts.next(), parts.next()) else {
                 return Err(format!("enum needs an IDL name and a name: {line}"));
             };
-            enums.push(Enum { name: name.to_string(), values: idl_enum(&idl, from)? });
+            enums.push(Enum {
+                name: name.to_string(),
+                values: idl_enum(&idl, from)?,
+            });
             doc.clear();
         } else if let Some(rest) = line.strip_prefix("js ") {
             match prims.last_mut() {
@@ -164,7 +197,13 @@ fn parse(text: &str) -> Result<Decl, String> {
     if let Some(p) = prims.iter().find(|p| p.js.is_empty()) {
         return Err(format!("no js body for {}", p.name));
     }
-    Ok(Decl { library, prefix, kinds, enums, prims })
+    Ok(Decl {
+        library,
+        prefix,
+        kinds,
+        enums,
+        prims,
+    })
 }
 
 /// The values of one `enum` from a WebIDL file, in the order it declares them.
@@ -175,9 +214,13 @@ fn idl_enum(path: &str, name: &str) -> Result<Vec<String>, String> {
     let root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").map_err(|e| e.to_string())?);
     let text = fs::read_to_string(root.join(path)).map_err(|e| format!("{path}: {e}"))?;
     let opener = format!("enum {name} {{");
-    let at = text.find(&opener).ok_or_else(|| format!("{path} has no enum {name}"))?;
+    let at = text
+        .find(&opener)
+        .ok_or_else(|| format!("{path} has no enum {name}"))?;
     let body = &text[at + opener.len()..];
-    let end = body.find("};").ok_or_else(|| format!("{name} is not closed"))?;
+    let end = body
+        .find("};")
+        .ok_or_else(|| format!("{name} is not closed"))?;
     let mut values = Vec::new();
     let mut rest = &body[..end];
     while let Some(open) = rest.find('"') {
@@ -225,8 +268,12 @@ fn emit_enum_haxe(e: &Enum, src: &str, idl: &str, package: &str) -> String {
 }
 
 fn parse_prim(rest: &str, doc: Vec<String>) -> Result<Prim, String> {
-    let open = rest.find('(').ok_or_else(|| format!("no arguments in: {rest}"))?;
-    let close = rest.rfind(')').ok_or_else(|| format!("no arguments in: {rest}"))?;
+    let open = rest
+        .find('(')
+        .ok_or_else(|| format!("no arguments in: {rest}"))?;
+    let close = rest
+        .rfind(')')
+        .ok_or_else(|| format!("no arguments in: {rest}"))?;
     let name = rest[..open].trim().to_string();
     let ret = rest[close + 1..]
         .trim()
@@ -255,7 +302,13 @@ fn parse_prim(rest: &str, doc: Vec<String>) -> Result<Prim, String> {
             args.push((n.trim().to_string(), t));
         }
     }
-    Ok(Prim { name, args, ret, js: String::new(), doc })
+    Ok(Prim {
+        name,
+        args,
+        ret,
+        js: String::new(),
+        doc,
+    })
 }
 
 fn banner(src: &str) -> String {
@@ -280,9 +333,17 @@ fn rust_head(out: &mut String, d: &Decl, p: &Prim) {
         .map(|(n, t)| format!("{n}: {}", ty(t).unwrap().rust))
         .collect::<Vec<_>>()
         .join(", ");
-    let ret = if p.ret == "void" { String::new() } else { format!(" -> {}", ty(&p.ret).unwrap().rust) };
+    let ret = if p.ret == "void" {
+        String::new()
+    } else {
+        format!(" -> {}", ty(&p.ret).unwrap().rust)
+    };
     out.push_str("#[no_mangle]\n");
-    let _ = writeln!(out, "pub unsafe extern \"C\" fn {}_{}({params}){ret} {{", d.library, p.name);
+    let _ = writeln!(
+        out,
+        "pub unsafe extern \"C\" fn {}_{}({params}){ret} {{",
+        d.library, p.name
+    );
 }
 
 fn rust_tail(out: &mut String, d: &Decl, p: &Prim) {
@@ -313,7 +374,10 @@ fn emit_kinds(d: &Decl, src: &str) -> String {
     out.push_str("#[repr(i32)]\npub enum Kind {\n");
     for (i, k) in d.kinds.iter().enumerate() {
         let mut c = k.chars();
-        let upper: String = c.next().map(|f| f.to_uppercase().to_string()).unwrap_or_default();
+        let upper: String = c
+            .next()
+            .map(|f| f.to_uppercase().to_string())
+            .unwrap_or_default();
         let _ = writeln!(out, "    {upper}{} = {},", c.as_str(), i + 1);
     }
     out.push_str("}\n");
@@ -329,7 +393,12 @@ fn emit_native(d: &Decl, src: &str) -> String {
     out.push_str("#[allow(unused_imports)]\nuse hl_abi::{define_prim, vbyte};\n\n");
     for p in &d.prims {
         rust_head(&mut out, d, p);
-        let call = p.args.iter().map(|(n, _)| n.as_str()).collect::<Vec<_>>().join(", ");
+        let call = p
+            .args
+            .iter()
+            .map(|(n, _)| n.as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
         let _ = writeln!(out, "    crate::imp::{}({call})", p.name);
         rust_tail(&mut out, d, p);
     }
@@ -436,7 +505,12 @@ fn emit_js(d: &Decl, src: &str, prelude: &str) -> String {
          \x20 const H = makeHandles(rt);\n  return {{\n"
     );
     for p in &d.prims {
-        let args = p.args.iter().map(|(n, _)| n.as_str()).collect::<Vec<_>>().join(", ");
+        let args = p
+            .args
+            .iter()
+            .map(|(n, _)| n.as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
         for line in &p.doc {
             let _ = writeln!(out, "    // {line}");
         }
@@ -554,6 +628,23 @@ fn write_if_changed(path: &Path, text: &str) -> io::Result<()> {
 /// Haxe externs and `IMPORTS.md` into the crate, since a page and a Haxe
 /// program need those without building anything.
 pub fn generate(api: impl AsRef<Path>) -> io::Result<()> {
+    generate_inner(api, Some(PathBuf::from("haxe")))
+}
+
+/// Writes the Haxe package beneath `haxe_root`, relative to the crate root.
+pub fn generate_to(api: impl AsRef<Path>, haxe_root: impl AsRef<Path>) -> io::Result<()> {
+    generate_inner(api, Some(haxe_root.as_ref().to_path_buf()))
+}
+
+/// Generates the runtime and host sides without publishing a Haxe package.
+///
+/// Use this while retiring a library-specific frontend in favour of externs
+/// generated by a shared API such as xgpu.
+pub fn generate_backend(api: impl AsRef<Path>) -> io::Result<()> {
+    generate_inner(api, None)
+}
+
+fn generate_inner(api: impl AsRef<Path>, haxe_root: Option<PathBuf>) -> io::Result<()> {
     let root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").map_err(io::Error::other)?);
     let api = root.join(api);
     let prelude_path = root.join("js/prelude.js");
@@ -562,7 +653,11 @@ pub fn generate(api: impl AsRef<Path>) -> io::Result<()> {
     println!("cargo:rerun-if-changed={}", prelude_path.display());
 
     let text = fs::read_to_string(&api)?;
-    let src = api.file_name().unwrap_or_default().to_string_lossy().to_string();
+    let src = api
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string();
     let decl = parse(&text).map_err(io::Error::other)?;
 
     let out = PathBuf::from(env::var("OUT_DIR").map_err(io::Error::other)?);
@@ -575,21 +670,28 @@ pub fn generate(api: impl AsRef<Path>) -> io::Result<()> {
     // A library with no prelude gets none; a native-only one has nothing for
     // a page to hold.
     let prelude = fs::read_to_string(&prelude_path).unwrap_or_default();
-    for e in &decl.enums {
-        let _ = write_if_changed(
-            &root.join(format!("haxe/{}/{}.hx", decl.library, e.name)),
-            &emit_enum_haxe(e, &src, "spec/webgpu.idl", &decl.library),
-        );
+    if let Some(haxe_root) = &haxe_root {
+        for e in &decl.enums {
+            let _ = write_if_changed(
+                &root
+                    .join(haxe_root)
+                    .join(&decl.library)
+                    .join(format!("{}.hx", e.name)),
+                &emit_enum_haxe(e, &src, "spec/webgpu.idl", &decl.library),
+            );
+        }
     }
     let module = decl.prefix.trim_end_matches('_').to_string();
     let _ = write_if_changed(
         &root.join(format!("js/{module}.js")),
         &emit_js(&decl, &src, &prelude),
     );
-    let _ = write_if_changed(
-        &root.join(format!("haxe/{}/_Native.hx", decl.library)),
-        &emit_haxe(&decl, &src),
-    );
+    if let Some(haxe_root) = &haxe_root {
+        let _ = write_if_changed(
+            &root.join(haxe_root).join(&decl.library).join("_Native.hx"),
+            &emit_haxe(&decl, &src),
+        );
+    }
     let _ = write_if_changed(&root.join("IMPORTS.md"), &emit_contract(&decl, &src));
     Ok(())
 }
