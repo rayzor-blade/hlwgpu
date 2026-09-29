@@ -34,6 +34,10 @@ The public Haxelib class path has two namespaces:
 - `gpu` is the generated xgpu API.
 - `hlwgpu.hxsl` compiles typed HXSL shaders to WGSL.
 
+Use the official [WebGPU specification](https://www.w3.org/TR/webgpu/) as the
+API reference for the portable `gpu` surface. hlwgpu also exposes xgpu's
+native extensions where the selected backend supports them.
+
 ## Typed shaders
 
 Implement `hlwgpu.hxsl.Shader` and put the shader expression in `SRC`. The
