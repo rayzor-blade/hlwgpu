@@ -4,21 +4,24 @@
 
 hlwgpu depends on `ash-future` for `ash.Future<T>`. Neither is on
 lib.haxe.org, so install both from their GitHub releases: `ash-future-<version>.zip`
-from [Ash](https://github.com/rayzor-blade/ash/releases), then
-`hlwgpu-<version>.zip` from this project's. `--skip-dependencies` stops
-Haxelib looking `ash-future` up on lib.haxe.org:
+from [Ash](https://github.com/rayzor-blade/ash/releases), then `hlwgpu.zip`
+from [hlwgpu](https://github.com/rayzor-blade/hlwgpu/releases), a versioned
+release or `nightly`. `--skip-dependencies` stops Haxelib looking
+`ash-future` up on lib.haxe.org:
 
 ```sh
 haxelib install ash-future-<version>.zip
-haxelib install --skip-dependencies hlwgpu-<version>.zip
+haxelib install --skip-dependencies hlwgpu.zip
 ```
 
-Compile with `-lib hlwgpu`, which brings in `ash-future`. The package carries `xgpu.hdll` for every desktop
-platform, and its `extraParams.hxml` copies the host's beside the generated
-HashLink program. `-D hlwgpu_vulkan` stages the Windows build that carries
-Vulkan beside D3D12. `-D hlwgpu_no_hdll` stages nothing, for a program that
-supplies its own `xgpu.hdll`; a source checkout has none, so `-lib hlwgpu` on
-one needs that define.
+Installing a newer nightly the same way replaces the old one.
+
+Compile with `-lib hlwgpu`, which brings in `ash-future`. The package carries
+`xgpu.hdll` for every desktop platform, and its `extraParams.hxml` copies the
+host's beside the generated HashLink program. `-D hlwgpu_vulkan` stages the
+Windows build that carries Vulkan beside D3D12. `-D hlwgpu_no_hdll` stages
+nothing, for a program that supplies its own `xgpu.hdll`; a source checkout
+has none, so `-lib hlwgpu` on one needs that define.
 
 The library is named `xgpu` at the HashLink boundary, which matches the
 `@:hlNative("xgpu", ...)` declarations in the generated `gpu` package.

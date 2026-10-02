@@ -92,7 +92,7 @@ pipeline constant keys as static fields.
 
 | Archive | Intended use |
 |---|---|
-| `hlwgpu-<version>.zip` | Haxelib package with every desktop `xgpu.hdll`, staged beside the `.hl` at compile time |
+| `hlwgpu.zip` | Haxelib package with every desktop `xgpu.hdll`, staged beside the `.hl` at compile time |
 | `xgpu-<platform>.hdll` | One desktop `xgpu.hdll`, as packaged in the Haxelib ZIP |
 | `hlwgpu-hdll-<platform>` | Desktop `xgpu.hdll`, generated Haxe API, and haxelib manifest |
 | `hlwgpu-ios-*` / `hlwgpu-android-*` | Static native archive for a mobile runtime integration |
@@ -101,11 +101,15 @@ pipeline constant keys as static fields.
 
 Native backends are Metal on Apple platforms, D3D12 on Windows, and Vulkan on
 Linux. The dedicated Windows Vulkan archive enables Vulkan as another runtime
-choice; from the Haxelib package, `-D hlwgpu_vulkan` stages it. Android builds include Vulkan and OpenGL ES. Browser Wasm uses the
-browser's WebGPU implementation.
+choice; from the Haxelib package, `-D hlwgpu_vulkan` stages it. Android builds
+include Vulkan and OpenGL ES. Browser Wasm uses the browser's WebGPU
+implementation.
 
-The moving `nightly` release is rebuilt on the daily schedule. Versioned
-releases follow the WebGPU IDL snapshot pinned by xgpu.
+The moving `nightly` release is rebuilt daily when `main` has changed, and its
+Haxelib package keeps the version in `haxelib.json`. Versioned releases follow
+the WebGPU IDL snapshot pinned by xgpu, and their package takes its version
+from the tag. Asset names carry no version, so the latest nightly is always
+<https://github.com/rayzor-blade/hlwgpu/releases/download/nightly/hlwgpu.zip>.
 
 The Wasm archive is an integration package rather than a standalone JS
 library. `xgpu.wasm` is a position-independent side module that shares the
