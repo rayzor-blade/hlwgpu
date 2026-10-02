@@ -119,7 +119,7 @@ for the runtime imports and supplied JavaScript modules.
 
 xgpu owns the API model, WebIDL input, generator, and reusable wgpu backend.
 hlwgpu owns the HashLink ABI adapter, release packaging, and HXSL compiler.
-`crates/hlwindow` is [xwindow](https://github.com/rayzor-blade/xwindow)'s
-adapter for HashLink and Ash: the `window` package, loaded as `xwindow.hdll`,
-or as the side module `xwindow.wasm` in a page. It is not in a release archive
-yet.
+[hlwindow](https://github.com/rayzor-blade/hlwindow) is
+[xwindow](https://github.com/rayzor-blade/xwindow)'s adapter for HashLink and
+Ash: the `window` package, loaded as `xwindow.hdll`, or as the side module
+`xwindow.wasm` in a page.
