@@ -21,10 +21,12 @@ second operation or enum count.
 
 ### Browser execution tests
 
-The threaded `xgpu.wasm` side module builds, links, and exports the generated
-API. It still needs a CI browser test that loads the bundle through Ash,
-requests a real browser adapter, runs a compute pass, renders to a canvas, and
-checks an asynchronous failure path.
+`scripts/browser_test.sh` loads the threaded `xgpu.wasm` bundle through Ash's
+page in headless Chrome and runs `crates/hlwgpu/test/browser/GpuTest.hx`
+against a real browser adapter: compute and rendering checked by exact
+readback, and failures observed through `ash.Future`. It runs locally; CI
+still needs a runner with an Ash that loads page side modules and a WebGPU
+adapter, software on a machine without a GPU (`CHROME_FLAGS`).
 
 ### Host conformance
 
