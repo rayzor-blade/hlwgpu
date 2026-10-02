@@ -7,8 +7,8 @@ abstract GpuPipelineLayout(Int) from Int to Int {
 }
 
 private extern class GpuPipelineLayoutNative {
-	@:hlNative("xidl", "gpu_pipeline_layout_valid")
+	@:hlNative("xgpu", "gpu_pipeline_layout_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_pipeline_layout_destroy")
+	@:hlNative("xgpu", "gpu_pipeline_layout_destroy")
 	public static function destroy(self:Int):Void;
 }

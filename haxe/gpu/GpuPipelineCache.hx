@@ -8,10 +8,10 @@ abstract GpuPipelineCache(Int) from Int to Int {
 }
 
 private extern class GpuPipelineCacheNative {
-	@:hlNative("xidl", "gpu_pipeline_cache_valid")
+	@:hlNative("xgpu", "gpu_pipeline_cache_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_pipeline_cache_destroy")
+	@:hlNative("xgpu", "gpu_pipeline_cache_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_pipeline_cache_get_data")
-	public static function getData(self:Int):hl.Abstract<"xidl_buffer_result">;
+	@:hlNative("xgpu", "gpu_pipeline_cache_get_data")
+	public static function getData(self:Int):hl.Abstract<"xgpu_buffer_result">;
 }

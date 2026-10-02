@@ -75,144 +75,144 @@ abstract GpuEncoder(Int) from Int to Int {
 }
 
 private extern class GpuEncoderNative {
-	@:hlNative("xidl", "gpu_encoder_destroy")
+	@:hlNative("xgpu", "gpu_encoder_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_valid")
+	@:hlNative("xgpu", "gpu_encoder_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_encoder_compute")
+	@:hlNative("xgpu", "gpu_encoder_compute")
 	public static function compute(self:Int, pipeline:GpuPipeline, bindgroup:GpuBindGroup, x:Int, y:Int, z:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_copy_buffer")
+	@:hlNative("xgpu", "gpu_encoder_copy_buffer")
 	public static function copyBuffer(self:Int, src:GpuBuffer, src_offset:haxe.Int64, dst:GpuBuffer, dst_offset:haxe.Int64, size:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_encoder_submit")
+	@:hlNative("xgpu", "gpu_encoder_submit")
 	public static function submit(self:Int, queue:GpuQueue):Void;
-	@:hlNative("xidl", "gpu_encoder_pass_reset")
+	@:hlNative("xgpu", "gpu_encoder_pass_reset")
 	public static function passReset(self:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_pass_colour")
+	@:hlNative("xgpu", "gpu_encoder_pass_colour")
 	public static function passColour(self:Int, view:GpuTextureView, r:Float, g:Float, b:Float, a:Float):Void;
-	@:hlNative("xidl", "gpu_encoder_pass_depth")
+	@:hlNative("xgpu", "gpu_encoder_pass_depth")
 	public static function passDepth(self:Int, view:GpuTextureView, clear:Float, stencil_clear:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_pass_begin")
+	@:hlNative("xgpu", "gpu_encoder_pass_begin")
 	public static function passBegin(self:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_pipeline")
+	@:hlNative("xgpu", "gpu_encoder_render_set_pipeline")
 	public static function renderSetPipeline(self:Int, pipeline:GpuPipeline):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_vertex_buffer")
+	@:hlNative("xgpu", "gpu_encoder_render_set_vertex_buffer")
 	public static function renderSetVertexBuffer(self:Int, slot:Int, buffer:GpuBuffer):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_viewport")
+	@:hlNative("xgpu", "gpu_encoder_render_set_viewport")
 	public static function renderSetViewport(self:Int, x:Float, y:Float, width:Float, height:Float, min_depth:Float, max_depth:Float):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_scissor_rect")
+	@:hlNative("xgpu", "gpu_encoder_render_set_scissor_rect")
 	public static function renderSetScissorRect(self:Int, x:Int, y:Int, width:Int, height:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_draw")
+	@:hlNative("xgpu", "gpu_encoder_render_draw")
 	public static function renderDraw(self:Int, vertices:Int, instances:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_end")
+	@:hlNative("xgpu", "gpu_encoder_render_end")
 	public static function renderEnd(self:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_copy_buffer_to_texture")
+	@:hlNative("xgpu", "gpu_encoder_copy_buffer_to_texture")
 	public static function copyBufferToTexture(self:Int, buffer:GpuBuffer, bytes_per_row:Int, texture:GpuTexture, width:Int, height:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_copy_texture_to_texture")
+	@:hlNative("xgpu", "gpu_encoder_copy_texture_to_texture")
 	public static function copyTextureToTexture(self:Int, src:GpuTexture, dst:GpuTexture, width:Int, height:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_clear_buffer")
+	@:hlNative("xgpu", "gpu_encoder_clear_buffer")
 	public static function clearBuffer(self:Int, buffer:GpuBuffer, offset:haxe.Int64, size:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_encoder_copy_texture_to_buffer")
+	@:hlNative("xgpu", "gpu_encoder_copy_texture_to_buffer")
 	public static function copyTextureToBuffer(self:Int, texture:GpuTexture, buffer:GpuBuffer, width:Int, height:Int, bytes_per_row:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_bind_group")
+	@:hlNative("xgpu", "gpu_encoder_render_set_bind_group")
 	public static function renderSetBindGroup(self:Int, group:Int, bindgroup:GpuBindGroup):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_bind_group_offsets")
+	@:hlNative("xgpu", "gpu_encoder_render_set_bind_group_offsets")
 	public static function renderSetBindGroupOffsets(self:Int, group:Int, bindgroup:GpuBindGroup, offsets:haxe.io.Bytes, start:haxe.Int64, count:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_begin")
+	@:hlNative("xgpu", "gpu_encoder_compute_begin")
 	public static function computeBegin(self:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_set_pipeline")
+	@:hlNative("xgpu", "gpu_encoder_compute_set_pipeline")
 	public static function computeSetPipeline(self:Int, pipeline:GpuPipeline):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_set_bind_group")
+	@:hlNative("xgpu", "gpu_encoder_compute_set_bind_group")
 	public static function computeSetBindGroup(self:Int, group:Int, bindgroup:GpuBindGroup):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_set_bind_group_offsets")
+	@:hlNative("xgpu", "gpu_encoder_compute_set_bind_group_offsets")
 	public static function computeSetBindGroupOffsets(self:Int, group:Int, bindgroup:GpuBindGroup, offsets:haxe.io.Bytes, start:haxe.Int64, count:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_dispatch")
+	@:hlNative("xgpu", "gpu_encoder_compute_dispatch")
 	public static function computeDispatch(self:Int, x:Int, y:Int, z:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_dispatch_indirect")
+	@:hlNative("xgpu", "gpu_encoder_compute_dispatch_indirect")
 	public static function computeDispatchIndirect(self:Int, buffer:GpuBuffer, offset:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_end")
+	@:hlNative("xgpu", "gpu_encoder_compute_end")
 	public static function computeEnd(self:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_begin_render_pass")
+	@:hlNative("xgpu", "gpu_encoder_begin_render_pass")
 	public static function beginRenderPass(self:Int, descriptor:GpuRenderPassDescriptor):Void;
-	@:hlNative("xidl", "gpu_encoder_begin_compute_pass")
+	@:hlNative("xgpu", "gpu_encoder_begin_compute_pass")
 	public static function beginComputePass(self:Int, descriptor:GpuComputePassDescriptor):Void;
-	@:hlNative("xidl", "gpu_encoder_render_draw_range")
+	@:hlNative("xgpu", "gpu_encoder_render_draw_range")
 	public static function renderDrawRange(self:Int, vertex_count:Int, instance_count:Int, first_vertex:Int, first_instance:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_draw_indexed_range")
+	@:hlNative("xgpu", "gpu_encoder_render_draw_indexed_range")
 	public static function renderDrawIndexedRange(self:Int, index_count:Int, instance_count:Int, first_index:Int, base_vertex:Int, first_instance:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_vertex_buffer_range")
+	@:hlNative("xgpu", "gpu_encoder_render_set_vertex_buffer_range")
 	public static function renderSetVertexBufferRange(self:Int, slot:Int, buffer:GpuBuffer, offset:haxe.Int64, size:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_index_buffer_range")
+	@:hlNative("xgpu", "gpu_encoder_render_set_index_buffer_range")
 	public static function renderSetIndexBufferRange(self:Int, buffer:GpuBuffer, format:IndexFormat, offset:haxe.Int64, size:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_encoder_render_multi_draw_indirect")
+	@:hlNative("xgpu", "gpu_encoder_render_multi_draw_indirect")
 	public static function renderMultiDrawIndirect(self:Int, buffer:GpuBuffer, offset:haxe.Int64, count:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_multi_draw_indexed_indirect")
+	@:hlNative("xgpu", "gpu_encoder_render_multi_draw_indexed_indirect")
 	public static function renderMultiDrawIndexedIndirect(self:Int, buffer:GpuBuffer, offset:haxe.Int64, count:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_multi_draw_indirect_count")
+	@:hlNative("xgpu", "gpu_encoder_render_multi_draw_indirect_count")
 	public static function renderMultiDrawIndirectCount(self:Int, buffer:GpuBuffer, offset:haxe.Int64, count_buffer:GpuBuffer, count_offset:haxe.Int64, max_count:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_multi_draw_indexed_indirect_count")
+	@:hlNative("xgpu", "gpu_encoder_render_multi_draw_indexed_indirect_count")
 	public static function renderMultiDrawIndexedIndirectCount(self:Int, buffer:GpuBuffer, offset:haxe.Int64, count_buffer:GpuBuffer, count_offset:haxe.Int64, max_count:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_immediates")
+	@:hlNative("xgpu", "gpu_encoder_render_set_immediates")
 	public static function renderSetImmediates(self:Int, offset:Int, data:haxe.io.Bytes, start:haxe.Int64, size:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_set_immediates")
+	@:hlNative("xgpu", "gpu_encoder_compute_set_immediates")
 	public static function computeSetImmediates(self:Int, offset:Int, data:haxe.io.Bytes, start:haxe.Int64, size:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_begin_occlusion_query")
+	@:hlNative("xgpu", "gpu_encoder_render_begin_occlusion_query")
 	public static function renderBeginOcclusionQuery(self:Int, index:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_end_occlusion_query")
+	@:hlNative("xgpu", "gpu_encoder_render_end_occlusion_query")
 	public static function renderEndOcclusionQuery(self:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_begin_pipeline_statistics_query")
+	@:hlNative("xgpu", "gpu_encoder_render_begin_pipeline_statistics_query")
 	public static function renderBeginPipelineStatisticsQuery(self:Int, query_set:GpuQuerySet, index:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_end_pipeline_statistics_query")
+	@:hlNative("xgpu", "gpu_encoder_render_end_pipeline_statistics_query")
 	public static function renderEndPipelineStatisticsQuery(self:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_begin_pipeline_statistics_query")
+	@:hlNative("xgpu", "gpu_encoder_compute_begin_pipeline_statistics_query")
 	public static function computeBeginPipelineStatisticsQuery(self:Int, query_set:GpuQuerySet, index:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_end_pipeline_statistics_query")
+	@:hlNative("xgpu", "gpu_encoder_compute_end_pipeline_statistics_query")
 	public static function computeEndPipelineStatisticsQuery(self:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_write_timestamp")
+	@:hlNative("xgpu", "gpu_encoder_write_timestamp")
 	public static function writeTimestamp(self:Int, query_set:GpuQuerySet, index:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_write_timestamp")
+	@:hlNative("xgpu", "gpu_encoder_render_write_timestamp")
 	public static function renderWriteTimestamp(self:Int, query_set:GpuQuerySet, index:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_write_timestamp")
+	@:hlNative("xgpu", "gpu_encoder_compute_write_timestamp")
 	public static function computeWriteTimestamp(self:Int, query_set:GpuQuerySet, index:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_resolve_query_set")
+	@:hlNative("xgpu", "gpu_encoder_resolve_query_set")
 	public static function resolveQuerySet(self:Int, query_set:GpuQuerySet, first:Int, count:Int, destination:GpuBuffer, offset:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_encoder_render_execute_bundle")
+	@:hlNative("xgpu", "gpu_encoder_render_execute_bundle")
 	public static function renderExecuteBundle(self:Int, bundle:GpuRenderBundle):Void;
-	@:hlNative("xidl", "gpu_encoder_render_draw_mesh_tasks")
+	@:hlNative("xgpu", "gpu_encoder_render_draw_mesh_tasks")
 	public static function renderDrawMeshTasks(self:Int, x:Int, y:Int, z:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_draw_mesh_tasks_indirect")
+	@:hlNative("xgpu", "gpu_encoder_render_draw_mesh_tasks_indirect")
 	public static function renderDrawMeshTasksIndirect(self:Int, buffer:GpuBuffer, offset:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_encoder_render_multi_draw_mesh_tasks_indirect")
+	@:hlNative("xgpu", "gpu_encoder_render_multi_draw_mesh_tasks_indirect")
 	public static function renderMultiDrawMeshTasksIndirect(self:Int, buffer:GpuBuffer, offset:haxe.Int64, count:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_multi_draw_mesh_tasks_indirect_count")
+	@:hlNative("xgpu", "gpu_encoder_render_multi_draw_mesh_tasks_indirect_count")
 	public static function renderMultiDrawMeshTasksIndirectCount(self:Int, buffer:GpuBuffer, offset:haxe.Int64, count_buffer:GpuBuffer, count_offset:haxe.Int64, max_count:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_build_acceleration_structures")
+	@:hlNative("xgpu", "gpu_encoder_build_acceleration_structures")
 	public static function buildAccelerationStructures(self:Int, build:GpuAccelerationStructureBuild):Void;
-	@:hlNative("xidl", "gpu_encoder_copy_buffer_to_texture_with")
+	@:hlNative("xgpu", "gpu_encoder_copy_buffer_to_texture_with")
 	public static function copyBufferToTextureWith(self:Int, source:GpuTexelCopyBufferInfo, destination:GpuTexelCopyTextureInfo, size:GpuExtent3D):Void;
-	@:hlNative("xidl", "gpu_encoder_copy_texture_to_buffer_with")
+	@:hlNative("xgpu", "gpu_encoder_copy_texture_to_buffer_with")
 	public static function copyTextureToBufferWith(self:Int, source:GpuTexelCopyTextureInfo, destination:GpuTexelCopyBufferInfo, size:GpuExtent3D):Void;
-	@:hlNative("xidl", "gpu_encoder_copy_texture_to_texture_with")
+	@:hlNative("xgpu", "gpu_encoder_copy_texture_to_texture_with")
 	public static function copyTextureToTextureWith(self:Int, source:GpuTexelCopyTextureInfo, destination:GpuTexelCopyTextureInfo, size:GpuExtent3D):Void;
-	@:hlNative("xidl", "gpu_encoder_clear_texture")
+	@:hlNative("xgpu", "gpu_encoder_clear_texture")
 	public static function clearTexture(self:Int, texture:GpuTexture):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_index_buffer")
+	@:hlNative("xgpu", "gpu_encoder_render_set_index_buffer")
 	public static function renderSetIndexBuffer(self:Int, buffer:GpuBuffer, format:IndexFormat):Void;
-	@:hlNative("xidl", "gpu_encoder_render_draw_indexed")
+	@:hlNative("xgpu", "gpu_encoder_render_draw_indexed")
 	public static function renderDrawIndexed(self:Int, indices:Int, instances:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_blend_constant")
+	@:hlNative("xgpu", "gpu_encoder_render_set_blend_constant")
 	public static function renderSetBlendConstant(self:Int, r:Float, g:Float, b:Float, a:Float):Void;
-	@:hlNative("xidl", "gpu_encoder_render_set_stencil_reference")
+	@:hlNative("xgpu", "gpu_encoder_render_set_stencil_reference")
 	public static function renderSetStencilReference(self:Int, reference:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_compute_indirect")
+	@:hlNative("xgpu", "gpu_encoder_compute_indirect")
 	public static function computeIndirect(self:Int, pipeline:GpuPipeline, bindgroup:GpuBindGroup, buffer:GpuBuffer, offset:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_encoder_render_draw_indirect")
+	@:hlNative("xgpu", "gpu_encoder_render_draw_indirect")
 	public static function renderDrawIndirect(self:Int, buffer:GpuBuffer, offset:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_encoder_render_draw_indexed_indirect")
+	@:hlNative("xgpu", "gpu_encoder_render_draw_indexed_indirect")
 	public static function renderDrawIndexedIndirect(self:Int, buffer:GpuBuffer, offset:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_encoder_push_debug_group")
+	@:hlNative("xgpu", "gpu_encoder_push_debug_group")
 	public static function pushDebugGroup(self:Int, label:String):Void;
-	@:hlNative("xidl", "gpu_encoder_pop_debug_group")
+	@:hlNative("xgpu", "gpu_encoder_pop_debug_group")
 	public static function popDebugGroup(self:Int):Void;
-	@:hlNative("xidl", "gpu_encoder_insert_debug_marker")
+	@:hlNative("xgpu", "gpu_encoder_insert_debug_marker")
 	public static function insertDebugMarker(self:Int, label:String):Void;
 }

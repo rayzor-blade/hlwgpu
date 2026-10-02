@@ -7,8 +7,8 @@ abstract GpuBindGroup(Int) from Int to Int {
 }
 
 private extern class GpuBindGroupNative {
-	@:hlNative("xidl", "gpu_bind_group_valid")
+	@:hlNative("xgpu", "gpu_bind_group_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_bind_group_destroy")
+	@:hlNative("xgpu", "gpu_bind_group_destroy")
 	public static function destroy(self:Int):Void;
 }

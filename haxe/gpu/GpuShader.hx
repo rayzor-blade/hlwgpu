@@ -9,12 +9,12 @@ abstract GpuShader(Int) from Int to Int {
 }
 
 private extern class GpuShaderNative {
-	@:hlNative("xidl", "gpu_shader_valid")
+	@:hlNative("xgpu", "gpu_shader_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_shader_destroy")
+	@:hlNative("xgpu", "gpu_shader_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_shader_messages")
+	@:hlNative("xgpu", "gpu_shader_messages")
 	public static function messages(self:Int):hl.Bytes;
-	@:hlNative("xidl", "gpu_shader_get_compilation_info")
+	@:hlNative("xgpu", "gpu_shader_get_compilation_info")
 	public static function getCompilationInfo(self:Int):ash.Future<GpuCompilationInfo>;
 }

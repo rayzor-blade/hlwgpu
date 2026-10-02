@@ -17,28 +17,28 @@ abstract GpuRenderBundleEncoder(Int) from Int to Int {
 }
 
 private extern class GpuRenderBundleEncoderNative {
-	@:hlNative("xidl", "gpu_render_bundle_encoder_valid")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_render_bundle_encoder_destroy")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_render_bundle_encoder_set_pipeline")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_set_pipeline")
 	public static function setPipeline(self:Int, pipeline:GpuPipeline):Void;
-	@:hlNative("xidl", "gpu_render_bundle_encoder_set_bind_group")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_set_bind_group")
 	public static function setBindGroup(self:Int, group:Int, bindgroup:GpuBindGroup):Void;
-	@:hlNative("xidl", "gpu_render_bundle_encoder_set_bind_group_offsets")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_set_bind_group_offsets")
 	public static function setBindGroupOffsets(self:Int, group:Int, bindgroup:GpuBindGroup, offsets:haxe.io.Bytes, start:haxe.Int64, count:Int):Void;
-	@:hlNative("xidl", "gpu_render_bundle_encoder_set_vertex_buffer")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_set_vertex_buffer")
 	public static function setVertexBuffer(self:Int, slot:Int, buffer:GpuBuffer, offset:haxe.Int64, size:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_render_bundle_encoder_set_index_buffer")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_set_index_buffer")
 	public static function setIndexBuffer(self:Int, buffer:GpuBuffer, format:IndexFormat, offset:haxe.Int64, size:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_render_bundle_encoder_draw")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_draw")
 	public static function draw(self:Int, vertex_count:Int, instance_count:Int, first_vertex:Int, first_instance:Int):Void;
-	@:hlNative("xidl", "gpu_render_bundle_encoder_draw_indexed")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_draw_indexed")
 	public static function drawIndexed(self:Int, index_count:Int, instance_count:Int, first_index:Int, base_vertex:Int, first_instance:Int):Void;
-	@:hlNative("xidl", "gpu_render_bundle_encoder_draw_indirect")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_draw_indirect")
 	public static function drawIndirect(self:Int, buffer:GpuBuffer, offset:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_render_bundle_encoder_draw_indexed_indirect")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_draw_indexed_indirect")
 	public static function drawIndexedIndirect(self:Int, buffer:GpuBuffer, offset:haxe.Int64):Void;
-	@:hlNative("xidl", "gpu_render_bundle_encoder_finish")
+	@:hlNative("xgpu", "gpu_render_bundle_encoder_finish")
 	public static function finish(self:Int):GpuRenderBundle;
 }

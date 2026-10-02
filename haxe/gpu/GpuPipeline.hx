@@ -8,10 +8,10 @@ abstract GpuPipeline(Int) from Int to Int {
 }
 
 private extern class GpuPipelineNative {
-	@:hlNative("xidl", "gpu_pipeline_valid")
+	@:hlNative("xgpu", "gpu_pipeline_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_pipeline_destroy")
+	@:hlNative("xgpu", "gpu_pipeline_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_pipeline_get_bind_group_layout")
+	@:hlNative("xgpu", "gpu_pipeline_get_bind_group_layout")
 	public static function getBindGroupLayout(self:Int, index:Int):GpuBindGroupLayout;
 }

@@ -3,7 +3,7 @@ package gpu;
 
 @:noCompletion
 class XidlBytes {
-	public static function take(value:hl.Abstract<"xidl_buffer_result">):haxe.io.Bytes {
+	public static function take(value:hl.Abstract<"xgpu_buffer_result">):haxe.io.Bytes {
 		if (value == null) return null;
 		var out = haxe.io.Bytes.alloc(XidlBytesNative.length(value));
 		XidlBytesNative.copy(value, out);
@@ -12,8 +12,8 @@ class XidlBytes {
 }
 
 private extern class XidlBytesNative {
-	@:hlNative("xidl", "buffer_result_len")
-	public static function length(value:hl.Abstract<"xidl_buffer_result">):Int;
-	@:hlNative("xidl", "buffer_result_copy")
-	public static function copy(value:hl.Abstract<"xidl_buffer_result">, out:haxe.io.Bytes):Void;
+	@:hlNative("xgpu", "buffer_result_len")
+	public static function length(value:hl.Abstract<"xgpu_buffer_result">):Int;
+	@:hlNative("xgpu", "buffer_result_copy")
+	public static function copy(value:hl.Abstract<"xgpu_buffer_result">, out:haxe.io.Bytes):Void;
 }

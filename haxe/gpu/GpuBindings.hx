@@ -11,16 +11,16 @@ abstract GpuBindings(Int) from Int to Int {
 }
 
 private extern class GpuBindingsNative {
-	@:hlNative("xidl", "gpu_bindings_new")
+	@:hlNative("xgpu", "gpu_bindings_new")
 	public static function create():GpuBindings;
-	@:hlNative("xidl", "gpu_bindings_valid")
+	@:hlNative("xgpu", "gpu_bindings_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_bindings_buffer")
+	@:hlNative("xgpu", "gpu_bindings_buffer")
 	public static function buffer(self:Int, buffer:GpuBuffer):Void;
-	@:hlNative("xidl", "gpu_bindings_texture")
+	@:hlNative("xgpu", "gpu_bindings_texture")
 	public static function texture(self:Int, view:GpuTextureView):Void;
-	@:hlNative("xidl", "gpu_bindings_sampler")
+	@:hlNative("xgpu", "gpu_bindings_sampler")
 	public static function sampler(self:Int, sampler:GpuSampler):Void;
-	@:hlNative("xidl", "gpu_bindings_destroy")
+	@:hlNative("xgpu", "gpu_bindings_destroy")
 	public static function destroy(self:Int):Void;
 }

@@ -14,22 +14,22 @@ abstract GpuCompilationInfo(Int) from Int to Int {
 }
 
 private extern class GpuCompilationInfoNative {
-	@:hlNative("xidl", "gpu_compilation_info_valid")
+	@:hlNative("xgpu", "gpu_compilation_info_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_compilation_info_destroy")
+	@:hlNative("xgpu", "gpu_compilation_info_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_compilation_info_message_count")
+	@:hlNative("xgpu", "gpu_compilation_info_message_count")
 	public static function messageCount(self:Int):Int;
-	@:hlNative("xidl", "gpu_compilation_info_message")
+	@:hlNative("xgpu", "gpu_compilation_info_message")
 	public static function message(self:Int, index:Int):hl.Bytes;
-	@:hlNative("xidl", "gpu_compilation_info_message_type")
+	@:hlNative("xgpu", "gpu_compilation_info_message_type")
 	public static function messageType(self:Int, index:Int):CompilationMessageType;
-	@:hlNative("xidl", "gpu_compilation_info_line_num")
+	@:hlNative("xgpu", "gpu_compilation_info_line_num")
 	public static function lineNum(self:Int, index:Int):haxe.Int64;
-	@:hlNative("xidl", "gpu_compilation_info_line_pos")
+	@:hlNative("xgpu", "gpu_compilation_info_line_pos")
 	public static function linePos(self:Int, index:Int):haxe.Int64;
-	@:hlNative("xidl", "gpu_compilation_info_offset")
+	@:hlNative("xgpu", "gpu_compilation_info_offset")
 	public static function offset(self:Int, index:Int):haxe.Int64;
-	@:hlNative("xidl", "gpu_compilation_info_length")
+	@:hlNative("xgpu", "gpu_compilation_info_length")
 	public static function length(self:Int, index:Int):haxe.Int64;
 }

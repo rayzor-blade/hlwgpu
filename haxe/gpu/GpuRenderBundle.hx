@@ -7,8 +7,8 @@ abstract GpuRenderBundle(Int) from Int to Int {
 }
 
 private extern class GpuRenderBundleNative {
-	@:hlNative("xidl", "gpu_render_bundle_valid")
+	@:hlNative("xgpu", "gpu_render_bundle_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_render_bundle_destroy")
+	@:hlNative("xgpu", "gpu_render_bundle_destroy")
 	public static function destroy(self:Int):Void;
 }

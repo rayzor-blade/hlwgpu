@@ -9,12 +9,12 @@ abstract GpuBlas(Int) from Int to Int {
 }
 
 private extern class GpuBlasNative {
-	@:hlNative("xidl", "gpu_blas_valid")
+	@:hlNative("xgpu", "gpu_blas_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_blas_destroy")
+	@:hlNative("xgpu", "gpu_blas_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_blas_prepare_compaction")
+	@:hlNative("xgpu", "gpu_blas_prepare_compaction")
 	public static function prepareCompaction(self:Int):ash.Future<Void>;
-	@:hlNative("xidl", "gpu_blas_ready_for_compaction")
+	@:hlNative("xgpu", "gpu_blas_ready_for_compaction")
 	public static function readyForCompaction(self:Int):Bool;
 }

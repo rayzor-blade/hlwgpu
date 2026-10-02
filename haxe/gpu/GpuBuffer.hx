@@ -12,18 +12,18 @@ abstract GpuBuffer(Int) from Int to Int {
 }
 
 private extern class GpuBufferNative {
-	@:hlNative("xidl", "gpu_buffer_valid")
+	@:hlNative("xgpu", "gpu_buffer_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_buffer_copy_out")
+	@:hlNative("xgpu", "gpu_buffer_copy_out")
 	public static function copyOut(self:Int, offset:haxe.Int64, out:haxe.io.Bytes, len:Int):Bool;
-	@:hlNative("xidl", "gpu_buffer_copy_in")
+	@:hlNative("xgpu", "gpu_buffer_copy_in")
 	public static function copyIn(self:Int, offset:haxe.Int64, data:haxe.io.Bytes, len:Int):Bool;
-	@:hlNative("xidl", "gpu_buffer_size")
+	@:hlNative("xgpu", "gpu_buffer_size")
 	public static function size(self:Int):haxe.Int64;
-	@:hlNative("xidl", "gpu_buffer_usage")
+	@:hlNative("xgpu", "gpu_buffer_usage")
 	public static function usage(self:Int):Int;
-	@:hlNative("xidl", "gpu_buffer_unmap")
+	@:hlNative("xgpu", "gpu_buffer_unmap")
 	public static function unmap(self:Int):Void;
-	@:hlNative("xidl", "gpu_buffer_destroy")
+	@:hlNative("xgpu", "gpu_buffer_destroy")
 	public static function destroy(self:Int):Void;
 }

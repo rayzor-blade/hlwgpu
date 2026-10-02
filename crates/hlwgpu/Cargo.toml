@@ -49,9 +49,10 @@ wgpu = { version = "30", default-features = false, features = [
 
 [dependencies]
 hl_abi = { workspace = true }
+hl_xidl = { workspace = true }
+# The generated model names Ash's Future carrier by this crate's path.
 ash_future_abi = { git = "https://github.com/rayzor-blade/ash.git", rev = "ac80cdb17c9fe82a0e86ab893e9d7304d5319fe6" }
 xgpu-core = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "ab97ab0b9bb52a41b5ac5b0490d4d098990a7867" }
-libloading = "0.8"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # The generated native backend uses these alongside its platform's wgpu.

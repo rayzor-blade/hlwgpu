@@ -12,18 +12,18 @@ abstract GpuInstance(Int) from Int to Int {
 }
 
 private extern class GpuInstanceNative {
-	@:hlNative("xidl", "gpu_instance_valid")
+	@:hlNative("xgpu", "gpu_instance_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_instance_new")
+	@:hlNative("xgpu", "gpu_instance_new")
 	public static function create():GpuInstance;
-	@:hlNative("xidl", "gpu_instance_destroy")
+	@:hlNative("xgpu", "gpu_instance_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_instance_request_adapter")
+	@:hlNative("xgpu", "gpu_instance_request_adapter")
 	public static function requestAdapter(self:Int, power:Power):ash.Future<GpuAdapter>;
-	@:hlNative("xidl", "gpu_instance_create_with")
+	@:hlNative("xgpu", "gpu_instance_create_with")
 	public static function createWith(descriptor:GpuInstanceDescriptor):GpuInstance;
-	@:hlNative("xidl", "gpu_instance_request_adapter_with")
+	@:hlNative("xgpu", "gpu_instance_request_adapter_with")
 	public static function requestAdapterWith(self:Int, options:GpuRequestAdapterOptions):ash.Future<GpuAdapter>;
-	@:hlNative("xidl", "gpu_instance_surface")
+	@:hlNative("xgpu", "gpu_instance_surface")
 	public static function surface(self:Int, platform:Int, wa:haxe.Int64, wb:haxe.Int64, da:haxe.Int64, db:haxe.Int64):GpuSurface;
 }

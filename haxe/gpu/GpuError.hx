@@ -9,12 +9,12 @@ abstract GpuError(Int) from Int to Int {
 }
 
 private extern class GpuErrorNative {
-	@:hlNative("xidl", "gpu_error_valid")
+	@:hlNative("xgpu", "gpu_error_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_error_destroy")
+	@:hlNative("xgpu", "gpu_error_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_error_filter")
+	@:hlNative("xgpu", "gpu_error_filter")
 	public static function filter(self:Int):ErrorFilter;
-	@:hlNative("xidl", "gpu_error_message")
+	@:hlNative("xgpu", "gpu_error_message")
 	public static function message(self:Int):hl.Bytes;
 }

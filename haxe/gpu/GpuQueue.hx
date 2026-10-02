@@ -12,18 +12,18 @@ abstract GpuQueue(Int) from Int to Int {
 }
 
 private extern class GpuQueueNative {
-	@:hlNative("xidl", "gpu_queue_valid")
+	@:hlNative("xgpu", "gpu_queue_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_queue_write_buffer")
+	@:hlNative("xgpu", "gpu_queue_write_buffer")
 	public static function writeBuffer(self:Int, buffer:GpuBuffer, offset:haxe.Int64, data:haxe.io.Bytes, len:Int):Void;
-	@:hlNative("xidl", "gpu_queue_write_texture")
+	@:hlNative("xgpu", "gpu_queue_write_texture")
 	public static function writeTexture(self:Int, texture:GpuTexture, data:haxe.io.Bytes, width:Int, height:Int, bytes_per_row:Int):Void;
-	@:hlNative("xidl", "gpu_queue_present_surface")
+	@:hlNative("xgpu", "gpu_queue_present_surface")
 	public static function presentSurface(self:Int, surface:GpuSurface):Void;
-	@:hlNative("xidl", "gpu_queue_write_texture_with")
+	@:hlNative("xgpu", "gpu_queue_write_texture_with")
 	public static function writeTextureWith(self:Int, destination:GpuTexelCopyTextureInfo, data:haxe.io.Bytes, layout:GpuTexelCopyBufferLayout, size:GpuExtent3D):Void;
-	@:hlNative("xidl", "gpu_queue_timestamp_period")
+	@:hlNative("xgpu", "gpu_queue_timestamp_period")
 	public static function timestampPeriod(self:Int):Float;
-	@:hlNative("xidl", "gpu_queue_compact_blas")
+	@:hlNative("xgpu", "gpu_queue_compact_blas")
 	public static function compactBlas(self:Int, blas:GpuBlas):GpuBlas;
 }

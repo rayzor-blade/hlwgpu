@@ -14,22 +14,22 @@ abstract GpuSurfaceCapabilities(Int) from Int to Int {
 }
 
 private extern class GpuSurfaceCapabilitiesNative {
-	@:hlNative("xidl", "gpu_surface_capabilities_valid")
+	@:hlNative("xgpu", "gpu_surface_capabilities_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_surface_capabilities_destroy")
+	@:hlNative("xgpu", "gpu_surface_capabilities_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_surface_capabilities_format_count")
+	@:hlNative("xgpu", "gpu_surface_capabilities_format_count")
 	public static function formatCount(self:Int):Int;
-	@:hlNative("xidl", "gpu_surface_capabilities_format")
+	@:hlNative("xgpu", "gpu_surface_capabilities_format")
 	public static function format(self:Int, index:Int):TextureFormat;
-	@:hlNative("xidl", "gpu_surface_capabilities_present_mode_count")
+	@:hlNative("xgpu", "gpu_surface_capabilities_present_mode_count")
 	public static function presentModeCount(self:Int):Int;
-	@:hlNative("xidl", "gpu_surface_capabilities_present_mode")
+	@:hlNative("xgpu", "gpu_surface_capabilities_present_mode")
 	public static function presentMode(self:Int, index:Int):PresentMode;
-	@:hlNative("xidl", "gpu_surface_capabilities_alpha_mode_count")
+	@:hlNative("xgpu", "gpu_surface_capabilities_alpha_mode_count")
 	public static function alphaModeCount(self:Int):Int;
-	@:hlNative("xidl", "gpu_surface_capabilities_alpha_mode")
+	@:hlNative("xgpu", "gpu_surface_capabilities_alpha_mode")
 	public static function alphaMode(self:Int, index:Int):AlphaMode;
-	@:hlNative("xidl", "gpu_surface_capabilities_usages")
+	@:hlNative("xgpu", "gpu_surface_capabilities_usages")
 	public static function usages(self:Int):Int;
 }

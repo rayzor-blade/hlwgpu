@@ -10,14 +10,14 @@ abstract GpuTlas(Int) from Int to Int {
 }
 
 private extern class GpuTlasNative {
-	@:hlNative("xidl", "gpu_tlas_valid")
+	@:hlNative("xgpu", "gpu_tlas_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_tlas_destroy")
+	@:hlNative("xgpu", "gpu_tlas_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_tlas_max_instances")
+	@:hlNative("xgpu", "gpu_tlas_max_instances")
 	public static function maxInstances(self:Int):Int;
-	@:hlNative("xidl", "gpu_tlas_set_instance")
+	@:hlNative("xgpu", "gpu_tlas_set_instance")
 	public static function setInstance(self:Int, index:Int, instance:GpuTlasInstance):Void;
-	@:hlNative("xidl", "gpu_tlas_clear_instance")
+	@:hlNative("xgpu", "gpu_tlas_clear_instance")
 	public static function clearInstance(self:Int, index:Int):Void;
 }

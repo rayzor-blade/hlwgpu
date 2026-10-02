@@ -47,88 +47,88 @@ abstract GpuDevice(Int) from Int to Int {
 }
 
 private extern class GpuDeviceNative {
-	@:hlNative("xidl", "gpu_device_valid")
+	@:hlNative("xgpu", "gpu_device_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_device_take_error")
+	@:hlNative("xgpu", "gpu_device_take_error")
 	public static function takeError(self:Int):hl.Bytes;
-	@:hlNative("xidl", "gpu_device_queue")
+	@:hlNative("xgpu", "gpu_device_queue")
 	public static function queue(self:Int):GpuQueue;
-	@:hlNative("xidl", "gpu_device_poll")
+	@:hlNative("xgpu", "gpu_device_poll")
 	public static function poll(self:Int):Void;
-	@:hlNative("xidl", "gpu_device_limit")
+	@:hlNative("xgpu", "gpu_device_limit")
 	public static function limit(self:Int, which:Limit):haxe.Int64;
-	@:hlNative("xidl", "gpu_device_supports")
+	@:hlNative("xgpu", "gpu_device_supports")
 	public static function supports(self:Int, feature:Feature):Bool;
-	@:hlNative("xidl", "gpu_device_destroy")
+	@:hlNative("xgpu", "gpu_device_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_device_create_buffer")
+	@:hlNative("xgpu", "gpu_device_create_buffer")
 	public static function createBuffer(self:Int, descriptor:GpuBufferDescriptor):GpuBuffer;
-	@:hlNative("xidl", "gpu_device_map_buffer")
+	@:hlNative("xgpu", "gpu_device_map_buffer")
 	public static function mapBuffer(self:Int, buffer:GpuBuffer, offset:haxe.Int64, size:haxe.Int64):ash.Future<Void>;
-	@:hlNative("xidl", "gpu_device_map_buffer_with")
+	@:hlNative("xgpu", "gpu_device_map_buffer_with")
 	public static function mapBufferWith(self:Int, buffer:GpuBuffer, mode:Int, offset:haxe.Int64, size:haxe.Int64):ash.Future<Void>;
-	@:hlNative("xidl", "gpu_device_create_shader")
+	@:hlNative("xgpu", "gpu_device_create_shader")
 	public static function createShader(self:Int, wgsl:String):GpuShader;
-	@:hlNative("xidl", "gpu_device_create_shader_module")
+	@:hlNative("xgpu", "gpu_device_create_shader_module")
 	public static function createShaderModule(self:Int, descriptor:GpuShaderModuleDescriptor):GpuShader;
-	@:hlNative("xidl", "gpu_device_create_shader_passthrough")
+	@:hlNative("xgpu", "gpu_device_create_shader_passthrough")
 	public static function createShaderPassthrough(self:Int, descriptor:GpuPassthroughShaderDescriptor):GpuShader;
-	@:hlNative("xidl", "gpu_device_compute_pipeline")
+	@:hlNative("xgpu", "gpu_device_compute_pipeline")
 	public static function computePipeline(self:Int, shader:GpuShader, entry:String):GpuPipeline;
-	@:hlNative("xidl", "gpu_device_bind_group")
+	@:hlNative("xgpu", "gpu_device_bind_group")
 	public static function bindGroup(self:Int, pipeline:GpuPipeline, group:Int, bindings:GpuBindings):GpuBindGroup;
-	@:hlNative("xidl", "gpu_device_encoder")
+	@:hlNative("xgpu", "gpu_device_encoder")
 	public static function encoder(self:Int):GpuEncoder;
-	@:hlNative("xidl", "gpu_device_queue_work_done")
+	@:hlNative("xgpu", "gpu_device_queue_work_done")
 	public static function queueWorkDone(self:Int, queue:GpuQueue):ash.Future<Void>;
-	@:hlNative("xidl", "gpu_device_texture")
+	@:hlNative("xgpu", "gpu_device_texture")
 	public static function texture(self:Int, descriptor:GpuTextureDescriptor):GpuTexture;
-	@:hlNative("xidl", "gpu_device_pipeline")
+	@:hlNative("xgpu", "gpu_device_pipeline")
 	public static function pipeline(self:Int):GpuPipelineBuilder;
-	@:hlNative("xidl", "gpu_device_sampler")
+	@:hlNative("xgpu", "gpu_device_sampler")
 	public static function sampler(self:Int, descriptor:GpuSamplerDescriptor):GpuSampler;
-	@:hlNative("xidl", "gpu_device_create_bind_group_layout")
+	@:hlNative("xgpu", "gpu_device_create_bind_group_layout")
 	public static function createBindGroupLayout(self:Int, descriptor:GpuBindGroupLayoutDescriptor):GpuBindGroupLayout;
-	@:hlNative("xidl", "gpu_device_create_pipeline_layout")
+	@:hlNative("xgpu", "gpu_device_create_pipeline_layout")
 	public static function createPipelineLayout(self:Int, descriptor:GpuPipelineLayoutDescriptor):GpuPipelineLayout;
-	@:hlNative("xidl", "gpu_device_create_bind_group")
+	@:hlNative("xgpu", "gpu_device_create_bind_group")
 	public static function createBindGroup(self:Int, descriptor:GpuBindGroupDescriptor):GpuBindGroup;
-	@:hlNative("xidl", "gpu_device_create_compute_pipeline")
+	@:hlNative("xgpu", "gpu_device_create_compute_pipeline")
 	public static function createComputePipeline(self:Int, descriptor:GpuComputePipelineDescriptor):GpuPipeline;
-	@:hlNative("xidl", "gpu_device_create_compute_pipeline_async")
+	@:hlNative("xgpu", "gpu_device_create_compute_pipeline_async")
 	public static function createComputePipelineAsync(self:Int, descriptor:GpuComputePipelineDescriptor):ash.Future<GpuPipeline>;
-	@:hlNative("xidl", "gpu_device_create_render_pipeline")
+	@:hlNative("xgpu", "gpu_device_create_render_pipeline")
 	public static function createRenderPipeline(self:Int, descriptor:GpuRenderPipelineDescriptor):GpuPipeline;
-	@:hlNative("xidl", "gpu_device_create_render_pipeline_async")
+	@:hlNative("xgpu", "gpu_device_create_render_pipeline_async")
 	public static function createRenderPipelineAsync(self:Int, descriptor:GpuRenderPipelineDescriptor):ash.Future<GpuPipeline>;
-	@:hlNative("xidl", "gpu_device_create_query_set")
+	@:hlNative("xgpu", "gpu_device_create_query_set")
 	public static function createQuerySet(self:Int, descriptor:GpuQuerySetDescriptor):GpuQuerySet;
-	@:hlNative("xidl", "gpu_device_create_render_bundle_encoder")
+	@:hlNative("xgpu", "gpu_device_create_render_bundle_encoder")
 	public static function createRenderBundleEncoder(self:Int, descriptor:GpuRenderBundleEncoderDescriptor):GpuRenderBundleEncoder;
-	@:hlNative("xidl", "gpu_device_supports_native")
+	@:hlNative("xgpu", "gpu_device_supports_native")
 	public static function supportsNative(self:Int, feature:NativeFeature):Bool;
-	@:hlNative("xidl", "gpu_device_native_limit")
+	@:hlNative("xgpu", "gpu_device_native_limit")
 	public static function nativeLimit(self:Int, which:NativeLimit):haxe.Int64;
-	@:hlNative("xidl", "gpu_device_push_error_scope")
+	@:hlNative("xgpu", "gpu_device_push_error_scope")
 	public static function pushErrorScope(self:Int, filter:ErrorFilter):Void;
-	@:hlNative("xidl", "gpu_device_pop_error_scope")
+	@:hlNative("xgpu", "gpu_device_pop_error_scope")
 	public static function popErrorScope(self:Int):ash.Future<GpuError>;
-	@:hlNative("xidl", "gpu_device_lost")
+	@:hlNative("xgpu", "gpu_device_lost")
 	public static function lost(self:Int):ash.Future<GpuDeviceLostInfo>;
-	@:hlNative("xidl", "gpu_device_create_mesh_pipeline")
+	@:hlNative("xgpu", "gpu_device_create_mesh_pipeline")
 	public static function createMeshPipeline(self:Int, descriptor:GpuMeshPipelineDescriptor):GpuPipeline;
-	@:hlNative("xidl", "gpu_device_create_mesh_pipeline_async")
+	@:hlNative("xgpu", "gpu_device_create_mesh_pipeline_async")
 	public static function createMeshPipelineAsync(self:Int, descriptor:GpuMeshPipelineDescriptor):ash.Future<GpuPipeline>;
-	@:hlNative("xidl", "gpu_device_create_external_texture")
+	@:hlNative("xgpu", "gpu_device_create_external_texture")
 	public static function createExternalTexture(self:Int, descriptor:GpuExternalTextureDescriptor):GpuExternalTexture;
-	@:hlNative("xidl", "gpu_device_create_blas")
+	@:hlNative("xgpu", "gpu_device_create_blas")
 	public static function createBlas(self:Int, descriptor:GpuBlasDescriptor):GpuBlas;
-	@:hlNative("xidl", "gpu_device_create_tlas")
+	@:hlNative("xgpu", "gpu_device_create_tlas")
 	public static function createTlas(self:Int, descriptor:GpuTlasDescriptor):GpuTlas;
-	@:hlNative("xidl", "gpu_device_create_pipeline_cache")
+	@:hlNative("xgpu", "gpu_device_create_pipeline_cache")
 	public static function createPipelineCache(self:Int, descriptor:GpuPipelineCacheDescriptor):GpuPipelineCache;
-	@:hlNative("xidl", "gpu_device_configure_surface_with")
+	@:hlNative("xgpu", "gpu_device_configure_surface_with")
 	public static function configureSurfaceWith(self:Int, surface:GpuSurface, configuration:GpuSurfaceConfiguration):Void;
-	@:hlNative("xidl", "gpu_device_configure_surface")
+	@:hlNative("xgpu", "gpu_device_configure_surface")
 	public static function configureSurface(self:Int, surface:GpuSurface, width:Int, height:Int, format:TextureFormat):Void;
 }

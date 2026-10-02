@@ -599,12 +599,21 @@ name = "hl_native_gen"
 version = "0.1.0"
 
 [[package]]
-name = "hlwgpu"
+name = "hl_xidl"
 version = "0.1.0"
 dependencies = [
  "ash_future_abi",
  "hl_abi 0.1.0 (git+https://github.com/rayzor-blade/hl_abi)",
  "libloading",
+]
+
+[[package]]
+name = "hlwgpu"
+version = "0.1.0"
+dependencies = [
+ "ash_future_abi",
+ "hl_abi 0.1.0 (git+https://github.com/rayzor-blade/hl_abi)",
+ "hl_xidl",
  "pollster",
  "raw-window-handle",
  "wgpu",
@@ -2581,7 +2590,6 @@ checksum = "ea6fc2961e4ef194dcbfe56bb845534d0dc8098940c7e5c012a258bfec6701bd"
 [[package]]
 name = "x_idl"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/x-idl.git?rev=bce92e00cd3b13b1b1ca0e94020b065a28d9e911#bce92e00cd3b13b1b1ca0e94020b065a28d9e911"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2599,12 +2607,10 @@ checksum = "163b33ed8786455e2fa5d72f554057ce3f3182425434f756cd39c99839d88e23"
 [[package]]
 name = "xgpu-backend"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=ab97ab0b9bb52a41b5ac5b0490d4d098990a7867#ab97ab0b9bb52a41b5ac5b0490d4d098990a7867"
 
 [[package]]
 name = "xgpu-bindgen"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=ab97ab0b9bb52a41b5ac5b0490d4d098990a7867#ab97ab0b9bb52a41b5ac5b0490d4d098990a7867"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2617,7 +2623,6 @@ dependencies = [
 [[package]]
 name = "xgpu-core"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=ab97ab0b9bb52a41b5ac5b0490d4d098990a7867#ab97ab0b9bb52a41b5ac5b0490d4d098990a7867"
 
 [[package]]
 name = "xkbcommon-dl"

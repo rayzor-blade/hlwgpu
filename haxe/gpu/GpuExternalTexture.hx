@@ -7,8 +7,8 @@ abstract GpuExternalTexture(Int) from Int to Int {
 }
 
 private extern class GpuExternalTextureNative {
-	@:hlNative("xidl", "gpu_external_texture_valid")
+	@:hlNative("xgpu", "gpu_external_texture_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_external_texture_destroy")
+	@:hlNative("xgpu", "gpu_external_texture_destroy")
 	public static function destroy(self:Int):Void;
 }

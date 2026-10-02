@@ -7,6 +7,7 @@ members = ["crates/*"]
 # library and ash's own native libraries use it too.
 hl_abi = { git = "https://github.com/rayzor-blade/hl_abi" }
 hl_native_gen = { path = "crates/hl_native_gen" }
+hl_xidl = { path = "crates/hl_xidl" }
 
 # A released hdll is loaded by a VM and never debugged through, so the symbol
 # table is dead weight; whole-program optimisation across one codegen unit is
@@ -20,3 +21,14 @@ strip = true
 # saves, since either way it only makes a call into native code.
 [profile.dev.package.hl_native_gen]
 opt-level = 0
+
+# xgpu with its HashLink library named and x-idl with HashLink's Bytes
+# layout are not in pinned revisions yet; build against the sibling
+# checkouts until they are.
+[patch."https://github.com/rayzor-blade/xgpu.git"]
+xgpu-backend = { path = "../xgpu/crates/xgpu-backend" }
+xgpu-bindgen = { path = "../xgpu/crates/xgpu-bindgen" }
+xgpu-core = { path = "../xgpu/crates/xgpu-core" }
+
+[patch."https://github.com/rayzor-blade/x-idl.git"]
+x_idl = { path = "../x-idl" }

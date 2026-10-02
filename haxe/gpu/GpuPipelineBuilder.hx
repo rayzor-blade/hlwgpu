@@ -18,30 +18,30 @@ abstract GpuPipelineBuilder(Int) from Int to Int {
 }
 
 private extern class GpuPipelineBuilderNative {
-	@:hlNative("xidl", "gpu_pipeline_builder_destroy")
+	@:hlNative("xgpu", "gpu_pipeline_builder_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_pipeline_builder_valid")
+	@:hlNative("xgpu", "gpu_pipeline_builder_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_pipeline_builder_shader")
+	@:hlNative("xgpu", "gpu_pipeline_builder_shader")
 	public static function shader(self:Int, shader:GpuShader, vs:String, fs:String):Void;
-	@:hlNative("xidl", "gpu_pipeline_builder_layout")
+	@:hlNative("xgpu", "gpu_pipeline_builder_layout")
 	public static function layout(self:Int, layout:GpuPipelineLayout):Void;
-	@:hlNative("xidl", "gpu_pipeline_builder_vertex_buffer")
+	@:hlNative("xgpu", "gpu_pipeline_builder_vertex_buffer")
 	public static function vertexBuffer(self:Int, stride:haxe.Int64, step:VertexStepMode):Void;
-	@:hlNative("xidl", "gpu_pipeline_builder_attribute_packed")
+	@:hlNative("xgpu", "gpu_pipeline_builder_attribute_packed")
 	public static function attributePacked(self:Int, format:VertexFormat):Void;
-	@:hlNative("xidl", "gpu_pipeline_builder_attribute")
+	@:hlNative("xgpu", "gpu_pipeline_builder_attribute")
 	public static function attribute(self:Int, format:VertexFormat, offset:haxe.Int64, location:Int):Void;
-	@:hlNative("xidl", "gpu_pipeline_builder_target")
+	@:hlNative("xgpu", "gpu_pipeline_builder_target")
 	public static function target(self:Int, format:TextureFormat, write_mask:Int):Void;
-	@:hlNative("xidl", "gpu_pipeline_builder_blend")
+	@:hlNative("xgpu", "gpu_pipeline_builder_blend")
 	public static function blend(self:Int, src:BlendFactor, dst:BlendFactor, op:BlendOperation, src_alpha:BlendFactor, dst_alpha:BlendFactor, op_alpha:BlendOperation):Void;
-	@:hlNative("xidl", "gpu_pipeline_builder_stencil")
+	@:hlNative("xgpu", "gpu_pipeline_builder_stencil")
 	public static function stencil(self:Int, compare:CompareFunction, fail:StencilOperation, depth_fail:StencilOperation, pass_op:StencilOperation, read_mask:Int, write_mask:Int):Void;
-	@:hlNative("xidl", "gpu_pipeline_builder_depth")
+	@:hlNative("xgpu", "gpu_pipeline_builder_depth")
 	public static function depth(self:Int, format:TextureFormat, write:Bool, compare:CompareFunction):Void;
-	@:hlNative("xidl", "gpu_pipeline_builder_primitive")
+	@:hlNative("xgpu", "gpu_pipeline_builder_primitive")
 	public static function primitive(self:Int, topology:PrimitiveTopology, cull:CullMode, front:FrontFace):Void;
-	@:hlNative("xidl", "gpu_pipeline_builder_build")
+	@:hlNative("xgpu", "gpu_pipeline_builder_build")
 	public static function build(self:Int):GpuPipeline;
 }

@@ -7,8 +7,8 @@ abstract GpuSampler(Int) from Int to Int {
 }
 
 private extern class GpuSamplerNative {
-	@:hlNative("xidl", "gpu_sampler_valid")
+	@:hlNative("xgpu", "gpu_sampler_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_sampler_destroy")
+	@:hlNative("xgpu", "gpu_sampler_destroy")
 	public static function destroy(self:Int):Void;
 }

@@ -16,26 +16,26 @@ abstract GpuTexture(Int) from Int to Int {
 }
 
 private extern class GpuTextureNative {
-	@:hlNative("xidl", "gpu_texture_valid")
+	@:hlNative("xgpu", "gpu_texture_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_texture_create_view")
+	@:hlNative("xgpu", "gpu_texture_create_view")
 	public static function createView(self:Int, descriptor:GpuTextureViewDescriptor):GpuTextureView;
-	@:hlNative("xidl", "gpu_texture_destroy")
+	@:hlNative("xgpu", "gpu_texture_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_texture_width")
+	@:hlNative("xgpu", "gpu_texture_width")
 	public static function width(self:Int):Int;
-	@:hlNative("xidl", "gpu_texture_height")
+	@:hlNative("xgpu", "gpu_texture_height")
 	public static function height(self:Int):Int;
-	@:hlNative("xidl", "gpu_texture_depth_or_array_layers")
+	@:hlNative("xgpu", "gpu_texture_depth_or_array_layers")
 	public static function depthOrArrayLayers(self:Int):Int;
-	@:hlNative("xidl", "gpu_texture_mip_level_count")
+	@:hlNative("xgpu", "gpu_texture_mip_level_count")
 	public static function mipLevelCount(self:Int):Int;
-	@:hlNative("xidl", "gpu_texture_sample_count")
+	@:hlNative("xgpu", "gpu_texture_sample_count")
 	public static function sampleCount(self:Int):Int;
-	@:hlNative("xidl", "gpu_texture_dimension")
+	@:hlNative("xgpu", "gpu_texture_dimension")
 	public static function dimension(self:Int):TextureDimension;
-	@:hlNative("xidl", "gpu_texture_format")
+	@:hlNative("xgpu", "gpu_texture_format")
 	public static function format(self:Int):TextureFormat;
-	@:hlNative("xidl", "gpu_texture_usage")
+	@:hlNative("xgpu", "gpu_texture_usage")
 	public static function usage(self:Int):Int;
 }

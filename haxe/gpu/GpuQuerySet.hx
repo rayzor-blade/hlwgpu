@@ -9,12 +9,12 @@ abstract GpuQuerySet(Int) from Int to Int {
 }
 
 private extern class GpuQuerySetNative {
-	@:hlNative("xidl", "gpu_query_set_valid")
+	@:hlNative("xgpu", "gpu_query_set_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_query_set_destroy")
+	@:hlNative("xgpu", "gpu_query_set_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_query_set_count")
+	@:hlNative("xgpu", "gpu_query_set_count")
 	public static function count(self:Int):Int;
-	@:hlNative("xidl", "gpu_query_set_query_type")
+	@:hlNative("xgpu", "gpu_query_set_query_type")
 	public static function queryType(self:Int):QueryType;
 }

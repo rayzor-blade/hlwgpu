@@ -1,0 +1,15 @@
+[package]
+name = "hl_xidl"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "The HashLink carriers x-idl generated bindings take from their adapter"
+publish = false
+
+[dependencies]
+hl_abi = { workspace = true }
+ash_future_abi = { git = "https://github.com/rayzor-blade/ash.git", rev = "ac80cdb17c9fe82a0e86ab893e9d7304d5319fe6" }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+# Ash's Future entry points, looked up in the running VM.
+libloading = "0.8"

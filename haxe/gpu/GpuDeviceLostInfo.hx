@@ -9,12 +9,12 @@ abstract GpuDeviceLostInfo(Int) from Int to Int {
 }
 
 private extern class GpuDeviceLostInfoNative {
-	@:hlNative("xidl", "gpu_device_lost_info_valid")
+	@:hlNative("xgpu", "gpu_device_lost_info_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_device_lost_info_destroy")
+	@:hlNative("xgpu", "gpu_device_lost_info_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_device_lost_info_reason")
+	@:hlNative("xgpu", "gpu_device_lost_info_reason")
 	public static function reason(self:Int):DeviceLostReason;
-	@:hlNative("xidl", "gpu_device_lost_info_message")
+	@:hlNative("xgpu", "gpu_device_lost_info_message")
 	public static function message(self:Int):hl.Bytes;
 }

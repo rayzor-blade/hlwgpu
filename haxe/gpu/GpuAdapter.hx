@@ -26,46 +26,46 @@ abstract GpuAdapter(Int) from Int to Int {
 }
 
 private extern class GpuAdapterNative {
-	@:hlNative("xidl", "gpu_adapter_valid")
+	@:hlNative("xgpu", "gpu_adapter_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_adapter_name")
+	@:hlNative("xgpu", "gpu_adapter_name")
 	public static function name(self:Int):hl.Bytes;
-	@:hlNative("xidl", "gpu_adapter_backend")
+	@:hlNative("xgpu", "gpu_adapter_backend")
 	public static function backend(self:Int):Backend;
-	@:hlNative("xidl", "gpu_adapter_limit")
+	@:hlNative("xgpu", "gpu_adapter_limit")
 	public static function limit(self:Int, which:Limit):haxe.Int64;
-	@:hlNative("xidl", "gpu_adapter_supports")
+	@:hlNative("xgpu", "gpu_adapter_supports")
 	public static function supports(self:Int, feature:Feature):Bool;
-	@:hlNative("xidl", "gpu_adapter_destroy")
+	@:hlNative("xgpu", "gpu_adapter_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_adapter_request_device")
+	@:hlNative("xgpu", "gpu_adapter_request_device")
 	public static function requestDevice(self:Int):ash.Future<GpuDevice>;
-	@:hlNative("xidl", "gpu_adapter_request_device_with")
+	@:hlNative("xgpu", "gpu_adapter_request_device_with")
 	public static function requestDeviceWith(self:Int, descriptor:GpuDeviceDescriptor):ash.Future<GpuDevice>;
-	@:hlNative("xidl", "gpu_adapter_driver")
+	@:hlNative("xgpu", "gpu_adapter_driver")
 	public static function driver(self:Int):hl.Bytes;
-	@:hlNative("xidl", "gpu_adapter_driver_info")
+	@:hlNative("xgpu", "gpu_adapter_driver_info")
 	public static function driverInfo(self:Int):hl.Bytes;
-	@:hlNative("xidl", "gpu_adapter_supports_native")
+	@:hlNative("xgpu", "gpu_adapter_supports_native")
 	public static function supportsNative(self:Int, feature:NativeFeature):Bool;
-	@:hlNative("xidl", "gpu_adapter_native_limit")
+	@:hlNative("xgpu", "gpu_adapter_native_limit")
 	public static function nativeLimit(self:Int, which:NativeLimit):haxe.Int64;
-	@:hlNative("xidl", "gpu_adapter_texture_format_usages")
+	@:hlNative("xgpu", "gpu_adapter_texture_format_usages")
 	public static function textureFormatUsages(self:Int, format:TextureFormat):Int;
-	@:hlNative("xidl", "gpu_adapter_texture_format_features")
+	@:hlNative("xgpu", "gpu_adapter_texture_format_features")
 	public static function textureFormatFeatures(self:Int, format:TextureFormat):Int;
-	@:hlNative("xidl", "gpu_adapter_vendor_id")
+	@:hlNative("xgpu", "gpu_adapter_vendor_id")
 	public static function vendorId(self:Int):haxe.Int64;
-	@:hlNative("xidl", "gpu_adapter_device_id")
+	@:hlNative("xgpu", "gpu_adapter_device_id")
 	public static function deviceId(self:Int):haxe.Int64;
-	@:hlNative("xidl", "gpu_adapter_device_type")
+	@:hlNative("xgpu", "gpu_adapter_device_type")
 	public static function deviceType(self:Int):DeviceType;
-	@:hlNative("xidl", "gpu_adapter_pci_bus_id")
+	@:hlNative("xgpu", "gpu_adapter_pci_bus_id")
 	public static function pciBusId(self:Int):hl.Bytes;
-	@:hlNative("xidl", "gpu_adapter_subgroup_min_size")
+	@:hlNative("xgpu", "gpu_adapter_subgroup_min_size")
 	public static function subgroupMinSize(self:Int):Int;
-	@:hlNative("xidl", "gpu_adapter_subgroup_max_size")
+	@:hlNative("xgpu", "gpu_adapter_subgroup_max_size")
 	public static function subgroupMaxSize(self:Int):Int;
-	@:hlNative("xidl", "gpu_adapter_pipeline_cache_key")
+	@:hlNative("xgpu", "gpu_adapter_pipeline_cache_key")
 	public static function pipelineCacheKey(self:Int):hl.Bytes;
 }

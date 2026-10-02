@@ -10,14 +10,14 @@ abstract GpuSurface(Int) from Int to Int {
 }
 
 private extern class GpuSurfaceNative {
-	@:hlNative("xidl", "gpu_surface_valid")
+	@:hlNative("xgpu", "gpu_surface_valid")
 	public static function valid(self:Int):Bool;
-	@:hlNative("xidl", "gpu_surface_preferred_format")
+	@:hlNative("xgpu", "gpu_surface_preferred_format")
 	public static function preferredFormat(self:Int, adapter:GpuAdapter):TextureFormat;
-	@:hlNative("xidl", "gpu_surface_acquire")
+	@:hlNative("xgpu", "gpu_surface_acquire")
 	public static function acquire(self:Int):GpuTextureView;
-	@:hlNative("xidl", "gpu_surface_destroy")
+	@:hlNative("xgpu", "gpu_surface_destroy")
 	public static function destroy(self:Int):Void;
-	@:hlNative("xidl", "gpu_surface_capabilities")
+	@:hlNative("xgpu", "gpu_surface_capabilities")
 	public static function capabilities(self:Int, adapter:GpuAdapter):GpuSurfaceCapabilities;
 }
