@@ -2,3 +2,6 @@
 /run
 /native/*/
 __pycache__/
+/.haxelib/
+/wgsl/
+/ash-future-*.zip

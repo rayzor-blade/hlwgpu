@@ -71,5 +71,22 @@ jobs:
       - name: Generated GPU API type-checks
         run: haxe -hl /tmp/gpu-api.hl -cp haxe -cp crates/hlwgpu/test -main GpuApi
 
-      - name: HXSL generates WGSL and layouts
-        run: haxe --interp -cp haxe -cp crates/hlwgpu/test -main Hxsl
+      # Through haxelib, as a program would: crates/hlwgpu/test/framework is a
+      # framework's haxelib whose extraParams.hxml registers its extension.
+      - name: HXSL generates WGSL and layouts, with a framework's extension
+        run: |
+          haxelib newrepo
+          curl -fsSLO https://github.com/rayzor-blade/ash/releases/download/v0.1.1/ash-future-0.1.1.zip
+          haxelib install ash-future-0.1.1.zip
+          haxelib dev hlwgpu .
+          haxelib dev hxsl-framework crates/hlwgpu/test/framework
+          HXSL_WGSL_DIR=wgsl haxe --interp -lib hxsl-framework -cp crates/hlwgpu/test -main Hxsl
+
+      # The naga wgpu validates with, from Cargo.lock.
+      - name: Install naga
+        run: |
+          version=$(sed -n '/^name = "naga"$/{n;s/version = "\(.*\)"/\1/p;}' Cargo.lock)
+          cargo install naga-cli --version "$version" --locked
+
+      - name: The WGSL validates
+        run: for f in wgsl/*.wgsl; do naga "$f"; done

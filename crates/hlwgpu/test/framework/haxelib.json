@@ -1,0 +1,8 @@
+{
+  "name": "hxsl-framework",
+  "license": "MIT",
+  "description": "A framework's HXSL extension, registered from its own extraParams.hxml.",
+  "version": "0.0.0",
+  "classPath": "",
+  "dependencies": {"hlwgpu": ""}
+}
