@@ -468,6 +468,17 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
+version = "0.2.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff2abc00be7fca6ebc474524697ae276ad847ad0a6b3faa4bcb027e9a4614ad0"
+dependencies = [
+ "cfg-if",
+ "libc",
+ "wasi",
+]
+
+[[package]]
+name = "getrandom"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "899def5c37c4fd7b2664648c28120ecec138e4d395b459e5ca34f9cce2dd77fd"
@@ -1336,6 +1347,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ppv-lite86"
+version = "0.2.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9"
+dependencies = [
+ "zerocopy",
+]
+
+[[package]]
 name = "presser"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1394,6 +1414,36 @@ name = "r-efi"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
+
+[[package]]
+name = "rand"
+version = "0.8.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e058c7de0b26af77780c769414d6257830bb240f3c38477dbc2c16e5f54d6d4c"
+dependencies = [
+ "libc",
+ "rand_chacha",
+ "rand_core",
+]
+
+[[package]]
+name = "rand_chacha"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
+dependencies = [
+ "ppv-lite86",
+ "rand_core",
+]
+
+[[package]]
+name = "rand_core"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
+dependencies = [
+ "getrandom 0.2.17",
+]
 
 [[package]]
 name = "range-alloc"
@@ -1838,6 +1888,12 @@ dependencies = [
  "same-file",
  "winapi-util",
 ]
+
+[[package]]
+name = "wasi"
+version = "0.11.1+wasi-snapshot-preview1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
 
 [[package]]
 name = "wasip2"
@@ -2523,6 +2579,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea6fc2961e4ef194dcbfe56bb845534d0dc8098940c7e5c012a258bfec6701bd"
 
 [[package]]
+name = "x_idl"
+version = "0.1.0"
+source = "git+https://github.com/rayzor-blade/x-idl.git?rev=bce92e00cd3b13b1b1ca0e94020b065a28d9e911#bce92e00cd3b13b1b1ca0e94020b065a28d9e911"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "rand",
+ "syn 2.0.119",
+ "weedle2",
+]
+
+[[package]]
 name = "xcursor"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2531,24 +2599,25 @@ checksum = "163b33ed8786455e2fa5d72f554057ce3f3182425434f756cd39c99839d88e23"
 [[package]]
 name = "xgpu-backend"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c#3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=ab97ab0b9bb52a41b5ac5b0490d4d098990a7867#ab97ab0b9bb52a41b5ac5b0490d4d098990a7867"
 
 [[package]]
 name = "xgpu-bindgen"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c#3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=ab97ab0b9bb52a41b5ac5b0490d4d098990a7867#ab97ab0b9bb52a41b5ac5b0490d4d098990a7867"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
  "weedle2",
  "wgpu-types",
+ "x_idl",
 ]
 
 [[package]]
 name = "xgpu-core"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c#3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=ab97ab0b9bb52a41b5ac5b0490d4d098990a7867#ab97ab0b9bb52a41b5ac5b0490d4d098990a7867"
 
 [[package]]
 name = "xkbcommon-dl"

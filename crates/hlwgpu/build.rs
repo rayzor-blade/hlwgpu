@@ -1,8 +1,25 @@
+use std::{env::temp_dir, path::PathBuf};
+
+fn gpu_decl(content: &str) -> Option<PathBuf> {
+    // make file unique to avoid collisions with other tests
+    let file_name = format!(
+        "gpu.api.{}.rs",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_micros()
+    );
+    let path = temp_dir().join(file_name);
+    std::fs::write(&path, content).ok()?;
+    Some(path)
+}
+
+
 fn main() {
     let out = std::path::PathBuf::from(std::env::var_os("OUT_DIR").unwrap());
     xgpu_backend::install_scoped(&out, "crate::xgpu").expect("installing the shared xgpu backend");
     let api = xgpu_bindgen::gpu_api();
-    let model = xgpu_bindgen::generate_hashlink(&api, xgpu_bindgen::WEBGPU_IDL)
+    let model = xgpu_bindgen::generate_hashlink(gpu_decl(&api), xgpu_bindgen::WEBGPU_IDL)
         .expect("generating the xgpu HashLink adapter");
     std::fs::write(out.join("xgpu_hashlink.rs"), model).expect("writing the xgpu adapter");
 
@@ -24,7 +41,7 @@ fn main() {
     let web = scoped(xgpu_backend::WEB);
     std::fs::write(out.join("xgpu_web.rs"), web).expect("writing the xgpu web implementation");
     let web_backend =
-        xgpu_bindgen::hashlink_web_backend("gpu", &api, &browser_idl, xgpu_backend::WEB)
+        xgpu_bindgen::hashlink_web_backend("gpu", gpu_decl(&api), &browser_idl, xgpu_backend::WEB)
             .expect("generating the xgpu web backend");
     let web_backend = web_backend
         .lines()
@@ -49,7 +66,7 @@ fn main() {
 
     let manifest = std::path::PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap());
     let haxe = manifest.join("../..").join("haxe");
-    for file in xgpu_bindgen::haxe(xgpu_bindgen::haxe::Runtime::HashLink)
+    for file in xgpu_bindgen::_haxe(xgpu_bindgen::haxe::Runtime::HashLink)
         .expect("generating the xgpu Haxe API")
     {
         let path = haxe.join(file.path);

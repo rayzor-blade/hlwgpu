@@ -19,8 +19,8 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 vulkan = ["wgpu/vulkan"]
 
 [build-dependencies]
-xgpu-backend = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c" }
-xgpu-bindgen = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c" }
+xgpu-backend = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "ab97ab0b9bb52a41b5ac5b0490d4d098990a7867" }
+xgpu-bindgen = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "ab97ab0b9bb52a41b5ac5b0490d4d098990a7867" }
 
 # One backend each, the one the platform actually uses. wgpu will compile
 # every backend it is given and only some are gated out by target, so leaving
@@ -50,7 +50,7 @@ wgpu = { version = "30", default-features = false, features = [
 [dependencies]
 hl_abi = { workspace = true }
 ash_future_abi = { git = "https://github.com/rayzor-blade/ash.git", rev = "ac80cdb17c9fe82a0e86ab893e9d7304d5319fe6" }
-xgpu-core = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "3c2990a7f87e55f7ffa24cb63d0758cfd5e6c85c" }
+xgpu-core = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "ab97ab0b9bb52a41b5ac5b0490d4d098990a7867" }
 libloading = "0.8"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
