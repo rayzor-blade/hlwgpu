@@ -29,7 +29,9 @@ unsafe extern "C" {
 
 type FutureCreate = unsafe extern "C" fn() -> *mut AshFuture;
 type FutureSettle = unsafe extern "C" fn(*mut AshFuture, *mut vdynamic) -> bool;
+#[cfg(not(target_family = "wasm"))]
 type AllocDynamic = unsafe extern "C" fn(*mut hl_type) -> *mut vdynamic;
+#[cfg(not(target_family = "wasm"))]
 type TypeOf = unsafe extern "C" fn() -> *mut hl_type;
 
 unsafe fn abstract_type() -> *mut hl_type {
