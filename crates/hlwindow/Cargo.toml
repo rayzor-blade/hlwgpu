@@ -11,18 +11,16 @@ publish = false
 # side module is linked from.
 crate-type = ["cdylib", "staticlib", "rlib"]
 
-# xwindow is not published yet: the sibling checkout, until a git revision
-# can be pinned.
 [build-dependencies]
-xwindow-backend = { path = "../../../xwindow/crates/xwindow-backend" }
-xwindow-bindgen = { path = "../../../xwindow/crates/xwindow-bindgen" }
+xwindow-backend = { git = "https://github.com/rayzor-blade/xwindow.git", rev = "7782fe978c232872da1914e7546eaaacce75c4c3" }
+xwindow-bindgen = { git = "https://github.com/rayzor-blade/xwindow.git", rev = "7782fe978c232872da1914e7546eaaacce75c4c3" }
 
 [dependencies]
 hl_abi = { workspace = true }
 hl_xidl = { workspace = true }
 # The generated model names Ash's Future carrier by this crate's path.
 ash_future_abi = { git = "https://github.com/rayzor-blade/ash.git", rev = "ac80cdb17c9fe82a0e86ab893e9d7304d5319fe6" }
-xwindow-core = { path = "../../../xwindow/crates/xwindow-core" }
+xwindow-core = { git = "https://github.com/rayzor-blade/xwindow.git", rev = "7782fe978c232872da1914e7546eaaacce75c4c3" }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 winit = "0.30"
