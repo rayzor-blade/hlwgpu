@@ -1,18 +1,29 @@
 [package]
 name = "hlwindow"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 license = "MIT"
-description = "A window for HashLink, over winit, so hlwgpu has something to draw into"
+description = "xwindow's window adapter for HashLink and Ash, loaded as xwindow.hdll"
 publish = false
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+# cdylib is the hdll a VM loads as xwindow.hdll; staticlib is what the wasm
+# side module is linked from.
+crate-type = ["cdylib", "staticlib", "rlib"]
 
+# xwindow is not published yet: the sibling checkout, until a git revision
+# can be pinned.
 [build-dependencies]
-hl_native_gen = { workspace = true }
+xwindow-backend = { path = "../../../xwindow/crates/xwindow-backend" }
+xwindow-bindgen = { path = "../../../xwindow/crates/xwindow-bindgen" }
 
 [dependencies]
 hl_abi = { workspace = true }
+hl_xidl = { workspace = true }
+# The generated model names Ash's Future carrier by this crate's path.
+ash_future_abi = { git = "https://github.com/rayzor-blade/ash.git", rev = "ac80cdb17c9fe82a0e86ab893e9d7304d5319fe6" }
+xwindow-core = { path = "../../../xwindow/crates/xwindow-core" }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
 winit = "0.30"
 raw-window-handle = "0.6"

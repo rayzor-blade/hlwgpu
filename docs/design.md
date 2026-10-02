@@ -81,8 +81,10 @@ shader-module descriptor.
 
 hlwgpu does not own a window system. Native surface creation consumes raw
 window and display handles supplied by the application or a window library.
-`crates/hlwindow` exists for repository tests only. Browser presentation uses
-the canvas owned by the runtime harness.
+`crates/hlwindow`, xwindow's HashLink adapter, is one: its
+`Window.platform()` and `Window.raw(0..3)` are the arguments
+`GpuInstance.surface()` takes. The GPU API does not depend on it. Browser
+presentation uses the canvas owned by the runtime harness.
 
 ## Validation
 

@@ -626,10 +626,14 @@ dependencies = [
 name = "hlwindow"
 version = "0.1.0"
 dependencies = [
+ "ash_future_abi",
  "hl_abi 0.1.0 (git+https://github.com/rayzor-blade/hl_abi)",
- "hl_native_gen",
+ "hl_xidl",
  "raw-window-handle",
  "winit",
+ "xwindow-backend",
+ "xwindow-bindgen",
+ "xwindow-core",
 ]
 
 [[package]]
@@ -2648,6 +2652,25 @@ name = "xml-rs"
 version = "0.8.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
+
+[[package]]
+name = "xwindow-backend"
+version = "0.1.0"
+
+[[package]]
+name = "xwindow-bindgen"
+version = "0.1.0"
+dependencies = [
+ "x_idl",
+ "xwindow-core",
+]
+
+[[package]]
+name = "xwindow-core"
+version = "0.1.0"
+dependencies = [
+ "raw-window-handle",
+]
 
 [[package]]
 name = "zerocopy"
