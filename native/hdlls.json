@@ -1,0 +1,26 @@
+{
+	"linux-x86_64": {
+		"releaseAsset": "xgpu-linux-x86_64.hdll",
+		"packagePath": "native/linux-x86_64/xgpu.hdll"
+	},
+	"linux-aarch64": {
+		"releaseAsset": "xgpu-linux-aarch64.hdll",
+		"packagePath": "native/linux-aarch64/xgpu.hdll"
+	},
+	"macos-aarch64": {
+		"releaseAsset": "xgpu-macos-aarch64.hdll",
+		"packagePath": "native/macos-aarch64/xgpu.hdll"
+	},
+	"macos-x86_64": {
+		"releaseAsset": "xgpu-macos-x86_64.hdll",
+		"packagePath": "native/macos-x86_64/xgpu.hdll"
+	},
+	"windows-x86_64": {
+		"releaseAsset": "xgpu-windows-x86_64.hdll",
+		"packagePath": "native/windows-x86_64/xgpu.hdll"
+	},
+	"windows-x86_64-vulkan": {
+		"releaseAsset": "xgpu-windows-x86_64-vulkan.hdll",
+		"packagePath": "native/windows-x86_64-vulkan/xgpu.hdll"
+	}
+}

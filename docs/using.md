@@ -2,16 +2,22 @@
 
 ## Install the native package
 
-Download `hlwgpu-hdll-<platform>` from the project's GitHub Releases page,
-unpack it, and register the directory with Haxelib:
+Download `hlwgpu-<version>.zip` from the project's GitHub Releases page and
+install it with Haxelib:
 
 ```sh
-haxelib dev hlwgpu /path/to/unpacked/hlwgpu
+haxelib install hlwgpu-<version>.zip
 ```
 
-Compile with `-lib hlwgpu` and place `xgpu.hdll` beside the resulting HashLink
-program. The library is named `xgpu` at the HashLink boundary, which matches
-the `@:hlNative("xgpu", ...)` declarations in the generated `gpu` package.
+Compile with `-lib hlwgpu`. The package carries `xgpu.hdll` for every desktop
+platform, and its `extraParams.hxml` copies the host's beside the generated
+HashLink program. `-D hlwgpu_vulkan` stages the Windows build that carries
+Vulkan beside D3D12. `-D hlwgpu_no_hdll` stages nothing, for a program that
+supplies its own `xgpu.hdll`; a source checkout has none, so `-lib hlwgpu` on
+one needs that define.
+
+The library is named `xgpu` at the HashLink boundary, which matches the
+`@:hlNative("xgpu", ...)` declarations in the generated `gpu` package.
 
 Ash provides the `ash.Future<T>` implementation used by asynchronous methods.
 Another HashLink host must provide the same Ash Future native ABI before it
