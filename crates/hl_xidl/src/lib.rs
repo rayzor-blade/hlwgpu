@@ -14,7 +14,12 @@ use ash_future_abi::AshFuture;
 use hl_abi::{hl_type, vbyte, vdynamic, vstring};
 
 unsafe extern "C" {
+    // A DLL's data is reached through its import pointer, not linked directly.
+    #[cfg(not(windows))]
     static mut hlt_abstract: hl_type;
+    #[cfg(windows)]
+    #[link_name = "__imp_hlt_abstract"]
+    static mut hlt_abstract_import: *mut hl_type;
     fn hl_gc_alloc_gen(ty: *mut hl_type, size: i32, flags: i32) -> *mut c_void;
     fn hl_add_root(slot: *mut c_void);
     fn hl_remove_root(slot: *mut c_void);
@@ -24,6 +29,19 @@ unsafe extern "C" {
 
 type FutureCreate = unsafe extern "C" fn() -> *mut AshFuture;
 type FutureSettle = unsafe extern "C" fn(*mut AshFuture, *mut vdynamic) -> bool;
+type AllocDynamic = unsafe extern "C" fn(*mut hl_type) -> *mut vdynamic;
+type TypeOf = unsafe extern "C" fn() -> *mut hl_type;
+
+unsafe fn abstract_type() -> *mut hl_type {
+    #[cfg(windows)]
+    unsafe {
+        hlt_abstract_import
+    }
+    #[cfg(not(windows))]
+    {
+        std::ptr::addr_of_mut!(hlt_abstract)
+    }
+}
 
 #[cfg(all(unix, not(target_family = "wasm")))]
 unsafe fn runtime_symbol<T: Copy>(name: &[u8]) -> Option<T> {
@@ -35,15 +53,62 @@ unsafe fn runtime_symbol<T: Copy>(name: &[u8]) -> Option<T> {
     }
 }
 
+// The executable is Ash, or stock HashLink's hl.exe, which keeps its runtime
+// in libhl.dll.
 #[cfg(windows)]
 unsafe fn runtime_symbol<T: Copy>(name: &[u8]) -> Option<T> {
-    unsafe {
-        libloading::os::windows::Library::this()
-            .ok()?
-            .get::<T>(name)
-            .ok()
-            .map(|symbol| *symbol)
+    use libloading::os::windows::Library;
+    let lookup = |library: Library| unsafe { library.get::<T>(name).ok().map(|symbol| *symbol) };
+    Library::this()
+        .ok()
+        .and_then(lookup)
+        .or_else(|| Library::open_already_loaded("libhl.dll").ok().and_then(lookup))
+}
+
+/// `value` as a `Null<Int>`. Ash allocates against its GC-registered type
+/// singletons, which only its `hlp_` names reach; stock HashLink has no `hlp_`
+/// names and allocates against `hlt_i32`. Both are looked up, so the library
+/// links against neither.
+#[cfg(not(target_family = "wasm"))]
+#[derive(Clone, Copy)]
+struct IntBoxer {
+    alloc: AllocDynamic,
+    ty: *mut hl_type,
+}
+
+// The type is a runtime singleton that lives as long as the process.
+#[cfg(not(target_family = "wasm"))]
+unsafe impl Send for IntBoxer {}
+#[cfg(not(target_family = "wasm"))]
+unsafe impl Sync for IntBoxer {}
+
+#[cfg(not(target_family = "wasm"))]
+fn box_i32(value: i32) -> *mut vdynamic {
+    static BOXER: OnceLock<Option<IntBoxer>> = OnceLock::new();
+    let found = *BOXER.get_or_init(|| unsafe {
+        let ash = runtime_symbol::<AllocDynamic>(b"hlp_alloc_dynamic\0")
+            .zip(runtime_symbol::<TypeOf>(b"hlp_type_i32\0"))
+            .map(|(alloc, ty)| IntBoxer { alloc, ty: ty() });
+        ash.or_else(|| {
+            let alloc = runtime_symbol::<AllocDynamic>(b"hl_alloc_dynamic\0")?;
+            let ty = runtime_symbol::<*mut hl_type>(b"hlt_i32\0")?;
+            Some(IntBoxer { alloc, ty })
+        })
+    });
+    let Some(boxer) = found else {
+        host::raise(ErrorKind::Runtime, "the runtime exports no way to box an Int");
+        unreachable!()
+    };
+    let boxed = unsafe { (boxer.alloc)(boxer.ty) };
+    if !boxed.is_null() {
+        unsafe { (*boxed).v.i = value };
     }
+    boxed
+}
+
+#[cfg(target_family = "wasm")]
+fn box_i32(value: i32) -> *mut vdynamic {
+    unsafe { hl_abi::box_i32(value) }
 }
 
 #[cfg(not(target_family = "wasm"))]
@@ -469,7 +534,7 @@ impl<T> Future<T> {
     pub fn resolve_boxed(self, value: Box<T>) -> bool {
         let handle = unsafe { (value.as_ref() as *const T).cast::<i32>().read_unaligned() };
         drop(value);
-        let boxed = unsafe { hl_abi::box_i32(handle) };
+        let boxed = box_i32(handle);
         unsafe { future_resolve()(self.0, boxed) }
     }
 }
@@ -520,7 +585,7 @@ pub fn managed_new<T>(value: T) -> *mut Managed<T> {
     let size = i32::try_from(size_of::<Managed<T>>()).expect("a managed value is too large");
     let managed = unsafe {
         hl_gc_alloc_gen(
-            std::ptr::addr_of_mut!(hlt_abstract),
+            abstract_type(),
             size,
             MEM_KIND_FINALIZER,
         )
