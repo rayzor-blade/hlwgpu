@@ -2,14 +2,18 @@
 
 ## Install the native package
 
-Download `hlwgpu-<version>.zip` from the project's GitHub Releases page and
-install it with Haxelib:
+hlwgpu depends on `ash-future` for `ash.Future<T>`. Neither is on
+lib.haxe.org, so install both from their GitHub releases: `ash-future-<version>.zip`
+from [Ash](https://github.com/rayzor-blade/ash/releases), then
+`hlwgpu-<version>.zip` from this project's. `--skip-dependencies` stops
+Haxelib looking `ash-future` up on lib.haxe.org:
 
 ```sh
-haxelib install hlwgpu-<version>.zip
+haxelib install ash-future-<version>.zip
+haxelib install --skip-dependencies hlwgpu-<version>.zip
 ```
 
-Compile with `-lib hlwgpu`. The package carries `xgpu.hdll` for every desktop
+Compile with `-lib hlwgpu`, which brings in `ash-future`. The package carries `xgpu.hdll` for every desktop
 platform, and its `extraParams.hxml` copies the host's beside the generated
 HashLink program. `-D hlwgpu_vulkan` stages the Windows build that carries
 Vulkan beside D3D12. `-D hlwgpu_no_hdll` stages nothing, for a program that
@@ -20,8 +24,8 @@ The library is named `xgpu` at the HashLink boundary, which matches the
 `@:hlNative("xgpu", ...)` declarations in the generated `gpu` package.
 
 Ash provides the `ash.Future<T>` implementation used by asynchronous methods.
-Another HashLink host must provide the same Ash Future native ABI before it
-loads `xgpu.hdll`.
+On stock HashLink, compile with `-D ash_future_stock` as well, so `ash-future`
+stages its `ash_future.hdll`; `xgpu.hdll` needs that native ABI loaded first.
 
 ## Request a device
 

@@ -8,5 +8,7 @@
   "version": "0.1.0",
   "releasenote": "xgpu-generated WebGPU API, native hdlls, a browser side module, and HXSL-to-WGSL support.",
   "classPath": "haxe",
-  "dependencies": {}
+  "dependencies": {
+    "ash-future": ""
+  }
 }
