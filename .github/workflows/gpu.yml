@@ -93,9 +93,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: gpu-macos
-      - uses: krdlab/setup-haxe@v1
-        with:
-          haxe-version: 4.3.6
+      # setup-haxe has no arm64 macOS build.
+      - name: Install Haxe
+        run: brew install haxe
 
       - name: Build xgpu.hdll
         run: cargo build -p hlwgpu
