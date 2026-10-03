@@ -77,7 +77,13 @@ class GpuTest {
 
 		features(adapter, device);
 		limits(device);
-		check(queue.timestampPeriod() == 1.0, "timestamps count nanoseconds");
+		// A browser counts timestamps in nanoseconds; a native backend in its
+		// hardware's ticks, whose length the period gives.
+		var period = queue.timestampPeriod();
+		if (adapter.backend() == gpu.Backend.BrowserWebGpu)
+			check(period == 1.0, "timestamps count nanoseconds");
+		else
+			check(period > 0, 'a timestamp tick is $period ns');
 		compute(device, queue);
 		render(device, queue);
 		errors(device);

@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>xgpu host conformance</title>
+<pre id="out"></pre>
+<script type="module">
+  // The page only relays: the program and the GPU agent are workers, since
+  // a synchronous xgpu call blocks on the mailbox with Atomics.wait.
+  const out = document.getElementById("out");
+  const program = new Worker(new URL("./program.mjs", import.meta.url), { type: "module" });
+  program.onerror = (e) => { out.textContent += `uncaught ${e.message}\n`; };
+  program.onmessage = ({ data }) => {
+    if (data.kind === "line") {
+      out.textContent += data.text + "\n";
+    } else if (data.kind === "agent") {
+      const agent = new Worker(new URL("./agent.mjs", import.meta.url), { type: "module" });
+      agent.onerror = (e) => { out.textContent += `uncaught in the agent: ${e.message}\n`; };
+      agent.postMessage({ memory: data.memory, address: data.address });
+    }
+  };
+</script>

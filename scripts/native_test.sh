@@ -1,6 +1,6 @@
 #!/bin/sh
 # Run crates/hlwgpu/test/browser/GpuTest.hx natively on stock HashLink, with
-# Ash Future's ABI from ash_future.hdll.
+# Ash Future's ABI from ash_future.hdll, or with ASH=<path> on Ash.
 #
 #     scripts/native_test.sh <xgpu.hdll> <ash-future dir>
 #
@@ -10,7 +10,8 @@
 # libhl. GPU_TEST_WITHOUT_ADAPTER=skip lets a machine with no GPU adapter
 # pass with SKIP rather than fail. Exits 0 on PASS or SKIP.
 #
-# HashLink's JIT emits x86-64, so this needs an x86-64 machine.
+# HashLink's JIT emits x86-64, so stock HashLink needs an x86-64 machine;
+# Ash runs anywhere it is built.
 set -e
 
 here=$(cd "$(dirname "$0")/.." && pwd)
@@ -23,8 +24,14 @@ xgpu=$1
 future=$2
 [ -f "$xgpu" ] || fail "no xgpu.hdll: pass its path"
 [ -f "$future/ash/Future.hx" ] || fail "no ash-future sources in '$future'"
-hl=${HL:-$(command -v hl || true)}
-[ -n "$hl" ] || fail "no hl: put it on PATH or set HL"
+if [ -n "$ASH" ]; then
+  [ -x "$ASH" ] || fail "no ash at $ASH"
+  runtime=Ash
+else
+  hl=${HL:-$(command -v hl || true)}
+  [ -n "$hl" ] || fail "no hl: put it on PATH or set HL"
+  runtime="stock HashLink"
+fi
 
 case "$(uname -s)" in
   Linux) platform=linux ;;
@@ -36,28 +43,35 @@ case "$(uname -m)" in
   x86_64 | amd64) platform=$platform-x86_64 ;;
   arm64 | aarch64) platform=$platform-aarch64 ;;
 esac
-[ -f "$future/native/$platform/ash_future.hdll" ] || fail "no ash_future.hdll for $platform"
-
 rm -rf "$work"
 mkdir -p "$work"
 cp "$xgpu" "$work/xgpu.hdll"
-cp "$future/native/$platform/ash_future.hdll" "$work/"
+# Ash has Future built in; stock HashLink loads it from ash_future.hdll.
+stock=""
+if [ -z "$ASH" ]; then
+  [ -f "$future/native/$platform/ash_future.hdll" ] || fail "no ash_future.hdll for $platform"
+  cp "$future/native/$platform/ash_future.hdll" "$work/"
+  stock="-D ash_future_stock"
+fi
 
-echo "== compiling crates/hlwgpu/test/browser/GpuTest.hx for stock HashLink"
+echo "== compiling crates/hlwgpu/test/browser/GpuTest.hx for $runtime"
+# shellcheck disable=SC2086
 haxe -cp "$here/crates/hlwgpu/test/browser" -cp "$here/haxe" -cp "$future" \
-  -D ash_future_stock -main GpuTest -hl "$work/gputest.hl"
+  $stock -main GpuTest -hl "$work/gputest.hl"
 
-# HashLink opens hdlls by bare name, which the loader finds on these paths,
-# beside libhl from wherever hl was built.
-lib="$(dirname "$hl")${HL_LIB_DIR:+:$HL_LIB_DIR}"
-export LD_LIBRARY_PATH="$work:$lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-export DYLD_LIBRARY_PATH="$work:$lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
-export PATH="$work:$lib:$PATH"
+# Stock HashLink opens hdlls by bare name, which the loader finds on these
+# paths, beside libhl from wherever hl was built. Ash stages its own.
+if [ -z "$ASH" ]; then
+  lib="$(dirname "$hl")${HL_LIB_DIR:+:$HL_LIB_DIR}"
+  export LD_LIBRARY_PATH="$work:$lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+  export DYLD_LIBRARY_PATH="$work:$lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+  export PATH="$work:$lib:$PATH"
+fi
 
 status=0
-(cd "$work" && timeout "$seconds" "$hl" gputest.hl) > "$work/out.log" 2>&1 || status=$?
+(cd "$work" && timeout "$seconds" "${ASH:-$hl}" gputest.hl) > "$work/out.log" 2>&1 || status=$?
 cat "$work/out.log"
-[ $status -eq 0 ] || fail "hl exited with $status"
+[ $status -eq 0 ] || fail "$runtime exited with $status"
 if grep -qx "PASS" "$work/out.log"; then
   echo "native_test: PASS"
 elif grep -qx "SKIP: no adapter" "$work/out.log"; then

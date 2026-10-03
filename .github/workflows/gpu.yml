@@ -1,9 +1,11 @@
 name: gpu
 
 # crates/hlwgpu/test/browser/GpuTest.hx against a real adapter: natively on
-# stock HashLink, and in headless Chrome through Ash's page. Hosted runners
-# have no GPU, so the adapters are software ones: lavapipe for Vulkan, WARP
-# for D3D12, and SwiftShader for the browser's WebGPU.
+# stock HashLink, on Ash where stock HashLink cannot run, and in headless
+# Chrome through Ash's page; and xgpu.wasm on a host that is not Ash. Hosted
+# runners have no GPU, so the adapters are software ones: lavapipe for
+# Vulkan, WARP for D3D12, and SwiftShader for the browser's WebGPU. A runner
+# that exposes no adapter at all, such as macOS's for Metal, reports SKIP.
 on:
   push:
     branches: [main, 'ci/**']
@@ -80,9 +82,43 @@ jobs:
           GPU_TEST_WITHOUT_ADAPTER: skip
         run: scripts/native_test.sh "target/debug/${{ matrix.lib }}" "$RUNNER_TEMP/ash-future"
 
+  # Stock HashLink's JIT emits x86-64 and the macOS runners are arm64, so
+  # Metal is exercised through Ash.
+  metal:
+    name: native, metal (Ash)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: gpu-macos
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.6
+
+      - name: Build xgpu.hdll
+        run: cargo build -p hlwgpu
+
+      - name: Fetch Ash and ash-future
+        run: |
+          mkdir -p "$RUNNER_TEMP/ash" "$RUNNER_TEMP/ash-future"
+          curl -fsSL https://github.com/rayzor-blade/ash/releases/download/nightly/ash-macos-aarch64.tar.gz \
+            | tar xz -C "$RUNNER_TEMP/ash"
+          curl -fsSL "$ASH_FUTURE_ZIP" -o "$RUNNER_TEMP/ash-future.zip"
+          unzip -q "$RUNNER_TEMP/ash-future.zip" -d "$RUNNER_TEMP/ash-future"
+
+      - name: GpuTest on Ash
+        env:
+          ASH: ${{ runner.temp }}/ash/ash
+          GPU_TEST_WITHOUT_ADAPTER: skip
+        run: scripts/native_test.sh target/debug/libhlwgpu.dylib "$RUNNER_TEMP/ash-future"
+
   browser:
     name: browser, WebGPU (SwiftShader)
     runs-on: ubuntu-24.04
+    env:
+      SWIFTSHADER: --enable-unsafe-webgpu --enable-features=Vulkan --use-vulkan=swiftshader --use-webgpu-adapter=swiftshader --use-angle=swiftshader
     steps:
       - uses: actions/checkout@v4
 
@@ -115,10 +151,13 @@ jobs:
       - name: GpuTest in headless Chrome
         run: |
           ASH="$RUNNER_TEMP/ash/ash" ASH_FUTURE="$RUNNER_TEMP/ash-future" \
-          CHROME="$(command -v google-chrome)" \
-          CHROME_FLAGS="--enable-unsafe-webgpu --enable-features=Vulkan --use-vulkan=swiftshader --use-webgpu-adapter=swiftshader --use-angle=swiftshader" \
+          CHROME="$(command -v google-chrome)" CHROME_FLAGS="$SWIFTSHADER" \
             scripts/browser_test.sh
+
+      # The contract in IMPORTS.md, held by a host that shares no code with Ash.
+      - name: xgpu.wasm on a host that is not Ash
+        run: CHROME="$(command -v google-chrome)" CHROME_FLAGS="$SWIFTSHADER" scripts/host_test.sh
 
       - name: Logs
         if: failure()
-        run: tail -n 100 target/browser-test/*.log || true
+        run: tail -n 100 target/browser-test/*.log target/host-test/*.log || true
