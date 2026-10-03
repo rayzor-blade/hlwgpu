@@ -47,8 +47,9 @@ echo "== compiling crates/hlwgpu/test/browser/GpuTest.hx for stock HashLink"
 haxe -cp "$here/crates/hlwgpu/test/browser" -cp "$here/haxe" -cp "$future" \
   -D ash_future_stock -main GpuTest -hl "$work/gputest.hl"
 
-# HashLink opens hdlls by bare name, which the loader finds on these paths.
-lib=${HL_LIB_DIR:-$(dirname "$hl")}
+# HashLink opens hdlls by bare name, which the loader finds on these paths,
+# beside libhl from wherever hl was built.
+lib="$(dirname "$hl")${HL_LIB_DIR:+:$HL_LIB_DIR}"
 export LD_LIBRARY_PATH="$work:$lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export DYLD_LIBRARY_PATH="$work:$lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
 export PATH="$work:$lib:$PATH"

@@ -59,7 +59,7 @@ jobs:
           hl=$(find "$RUNNER_TEMP/hashlink/build" -type f \( -name hl -o -name hl.exe \) | head -1)
           echo "HL=$hl" >> "$GITHUB_ENV"
           # Where libhl's import library (Windows) and shared library sit.
-          lib=$(dirname "$(find "$RUNNER_TEMP/hashlink/build" -type f \( -name 'libhl.lib' -o -name 'libhl.so' \) | head -1)")
+          lib=$(dirname "$(find "$RUNNER_TEMP/hashlink/build" \( -name 'libhl.lib' -o -name 'libhl.so*' \) | head -1)")
           echo "HL_LIB_DIR=$lib" >> "$GITHUB_ENV"
           echo "hl at $hl, libhl in $lib"
 

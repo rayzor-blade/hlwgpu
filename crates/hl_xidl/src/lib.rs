@@ -83,6 +83,64 @@ unsafe fn runtime_symbol<T: Copy>(name: &[u8]) -> Option<T> {
         })
 }
 
+#[cfg(not(target_family = "wasm"))]
+struct ThreadApi {
+    get: unsafe extern "C" fn() -> *mut c_void,
+    register: unsafe extern "C" fn(*mut c_void),
+    unregister: unsafe extern "C" fn(),
+}
+
+/// The thread registration a runtime exports, if it has any.
+#[cfg(not(target_family = "wasm"))]
+fn thread_api() -> Option<&'static ThreadApi> {
+    static API: OnceLock<Option<ThreadApi>> = OnceLock::new();
+    API.get_or_init(|| unsafe {
+        Some(ThreadApi {
+            get: runtime_symbol(b"hl_get_thread\0")?,
+            register: runtime_symbol(b"hl_register_thread\0")?,
+            unregister: runtime_symbol(b"hl_unregister_thread\0")?,
+        })
+    })
+    .as_ref()
+}
+
+/// Leaves HashLink's GC when dropped, if `attached` joined it.
+#[cfg(not(target_family = "wasm"))]
+struct Joined(Option<&'static ThreadApi>);
+
+#[cfg(not(target_family = "wasm"))]
+impl Drop for Joined {
+    fn drop(&mut self) {
+        if let Some(api) = self.0 {
+            unsafe { (api.unregister)() };
+        }
+    }
+}
+
+/// Runs `body` with the calling thread known to HashLink's GC. A backend's
+/// worker thread is not, and stock HashLink aborts when one allocates or
+/// changes a root. It joins only for the call, so a thread waiting outside
+/// HashLink never holds up a collection.
+#[cfg(not(target_family = "wasm"))]
+fn attached<R>(body: impl FnOnce() -> R) -> R {
+    // The GC scans this thread's stack from here down while it is joined.
+    let top = 0usize;
+    let _joined = match thread_api() {
+        Some(api) if unsafe { (api.get)() }.is_null() => {
+            unsafe { (api.register)(std::hint::black_box(&top as *const usize).cast_mut().cast()) };
+            Joined(Some(api))
+        }
+        _ => Joined(None),
+    };
+    body()
+}
+
+/// A wasm program's threads are the runtime's own.
+#[cfg(target_family = "wasm")]
+fn attached<R>(body: impl FnOnce() -> R) -> R {
+    body()
+}
+
 /// `value` as a `Null<Int>`. Ash allocates against its GC-registered type
 /// singletons, which only its `hlp_` names reach; stock HashLink has no `hlp_`
 /// names and allocates against `hlt_i32`. Both are looked up, so the library
@@ -326,7 +384,7 @@ impl Text {
         };
         let mut units: Vec<u16> = value.encode_utf16().collect();
         units.push(0);
-        Value(unsafe { hl_alloc_strbytes(units.as_ptr()) })
+        Value(attached(|| unsafe { hl_alloc_strbytes(units.as_ptr()) }))
     }
 
     pub fn into_ucs2(self) -> *mut vbyte {
@@ -338,7 +396,7 @@ impl Text {
         let Ok(bytes) = i32::try_from(bytes) else {
             return std::ptr::null_mut();
         };
-        let out = unsafe { hl_abi::hl_alloc_bytes(bytes) };
+        let out = attached(|| unsafe { hl_abi::hl_alloc_bytes(bytes) });
         if !out.is_null() {
             unsafe {
                 std::ptr::copy_nonoverlapping(units.as_ptr().cast::<u8>(), out, bytes as usize)
@@ -381,14 +439,14 @@ unsafe impl Sync for HlBytesRoot {}
 impl HlBytesRoot {
     fn new(value: *mut HlBytes) -> Self {
         let mut slot = Box::new(value);
-        unsafe { hl_add_root((&mut *slot as *mut *mut HlBytes).cast()) };
+        attached(|| unsafe { hl_add_root((&mut *slot as *mut *mut HlBytes).cast()) });
         Self(slot)
     }
 }
 
 impl Drop for HlBytesRoot {
     fn drop(&mut self) {
-        unsafe { hl_remove_root((&mut *self.0 as *mut *mut HlBytes).cast()) };
+        attached(|| unsafe { hl_remove_root((&mut *self.0 as *mut *mut HlBytes).cast()) });
     }
 }
 
@@ -554,7 +612,7 @@ impl<T> Future<T> {
     // Making one asks the runtime for a future, which a default should not.
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        Self(unsafe { future_create()() }, PhantomData)
+        Self(attached(|| unsafe { future_create()() }), PhantomData)
     }
 
     pub fn as_ptr(self) -> *mut AshFuture {
@@ -562,18 +620,18 @@ impl<T> Future<T> {
     }
 
     pub fn resolve(self, value: Value) -> bool {
-        unsafe { future_resolve()(self.0, value.0) }
+        attached(|| unsafe { future_resolve()(self.0, value.0) })
     }
 
     pub fn reject(self, error: Value) -> bool {
-        unsafe { future_reject()(self.0, error.0) }
+        attached(|| unsafe { future_reject()(self.0, error.0) })
     }
 
     pub fn resolve_boxed(self, value: Box<T>) -> bool {
         let handle = unsafe { (value.as_ref() as *const T).cast::<i32>().read_unaligned() };
         drop(value);
-        let boxed = box_i32(handle);
-        unsafe { future_resolve()(self.0, boxed) }
+        // One call, so the box is on a stack the GC scans until it is settled.
+        attached(|| unsafe { future_resolve()(self.0, box_i32(handle)) })
     }
 }
 
@@ -622,7 +680,8 @@ pub fn managed_new<T>(value: T) -> *mut Managed<T> {
     const MEM_KIND_FINALIZER: i32 = 3;
     let size = i32::try_from(size_of::<Managed<T>>()).expect("a managed value is too large");
     let managed =
-        unsafe { hl_gc_alloc_gen(abstract_type(), size, MEM_KIND_FINALIZER).cast::<Managed<T>>() };
+        attached(|| unsafe { hl_gc_alloc_gen(abstract_type(), size, MEM_KIND_FINALIZER) })
+            .cast::<Managed<T>>();
     assert!(
         !managed.is_null(),
         "HashLink could not allocate a managed value"
