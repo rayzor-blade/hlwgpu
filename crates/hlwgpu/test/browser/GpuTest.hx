@@ -38,9 +38,11 @@ import haxe.Int64;
 import haxe.io.Bytes;
 
 /**
-	xgpu's browser backend, checked against what the GPU hands back: a
-	compute pass's integers, a render target's pixels, and the errors and
-	rejections a program can observe. Prints `PASS` or `FAIL <n>` last.
+	xgpu, checked against what the GPU hands back: a compute pass's
+	integers, a render target's pixels, and the errors and rejections a
+	program can observe. Runs in a browser (scripts/browser_test.sh) and
+	natively (scripts/native_test.sh). Prints `PASS`, `FAIL <n>` or
+	`SKIP: no adapter` last.
 **/
 class GpuTest {
 	static var failures = 0;
@@ -63,6 +65,11 @@ class GpuTest {
 		var instance = GpuInstance.createWith(new GpuInstanceDescriptor());
 		check(instance.valid(), "an instance made with native options");
 		var adapter = instance.requestAdapter(Power.HighPerformance).await();
+		// A hosted runner with no GPU, told apart from an API or driver failure.
+		if (!adapter.valid() && Sys.getEnv("GPU_TEST_WITHOUT_ADAPTER") == "skip") {
+			Sys.println("SKIP: no adapter");
+			return;
+		}
 		check(adapter.valid(), "an adapter: " + adapter.name());
 		var device = adapter.requestDevice().await();
 		check(device.valid(), "a device");
