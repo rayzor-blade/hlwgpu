@@ -21,3 +21,10 @@ xgpu-bindgen = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "71c25d
 lto = true
 codegen-units = 1
 strip = true
+
+# For a program that would rather ship a smaller xgpu.hdll than record draws
+# and build pipelines as fast: `cargo build --profile release-small -p hlwgpu`
+# writes it to target/release-small. Releases use `release`.
+[profile.release-small]
+inherits = "release"
+opt-level = "z"
