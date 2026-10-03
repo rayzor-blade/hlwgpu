@@ -68,8 +68,13 @@ if [ -z "$ASH" ]; then
   export PATH="$work:$lib:$PATH"
 fi
 
+# macOS has no timeout(1); an alarm kills the program the same way.
+limit() {
+  if command -v timeout > /dev/null; then timeout "$@"; else perl -e 'alarm shift; exec @ARGV' "$@"; fi
+}
+
 status=0
-(cd "$work" && timeout "$seconds" "${ASH:-$hl}" gputest.hl) > "$work/out.log" 2>&1 || status=$?
+(cd "$work" && limit "$seconds" "${ASH:-$hl}" gputest.hl) > "$work/out.log" 2>&1 || status=$?
 cat "$work/out.log"
 [ $status -eq 0 ] || fail "$runtime exited with $status"
 if grep -qx "PASS" "$work/out.log"; then
