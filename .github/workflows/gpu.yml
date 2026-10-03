@@ -32,12 +32,12 @@ jobs:
           - { os: ubuntu-24.04, backend: vulkan (lavapipe), lib: libhlwgpu.so }
           - { os: windows-2022, backend: d3d12 (WARP), lib: hlwgpu.dll }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: gpu-${{ matrix.os }}
-      - uses: krdlab/setup-haxe@v1
+      - uses: krdlab/setup-haxe@v2
         with:
           haxe-version: 4.3.6
 
@@ -88,7 +88,7 @@ jobs:
     name: native, metal (Ash)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
@@ -120,7 +120,7 @@ jobs:
     env:
       SWIFTSHADER: --enable-unsafe-webgpu --enable-features=Vulkan --use-vulkan=swiftshader --use-webgpu-adapter=swiftshader --use-angle=swiftshader
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # A side module is position-independent and the shipped core and std are
       # not, so they are rebuilt. That needs nightly and rust-src.
@@ -131,10 +131,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: gpu-browser
-      - uses: krdlab/setup-haxe@v1
+      - uses: krdlab/setup-haxe@v2
         with:
           haxe-version: 4.3.6
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 

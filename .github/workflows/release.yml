@@ -33,7 +33,7 @@ jobs:
       tag: ${{ steps.plan.outputs.tag }}
       build: ${{ steps.plan.outputs.build }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - id: plan
         env:
@@ -81,7 +81,7 @@ jobs:
           # as well, chosen with WGPU_BACKEND=vulkan.
           - { os: windows-2022,     name: windows-x64-vulkan, platform: windows-x86_64-vulkan, target: x86_64-pc-windows-msvc, built: "", ext: dll, features: vulkan }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -133,7 +133,7 @@ jobs:
           cp LICENSE README.md out/
           ls -la out
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: hlwgpu-hdll-${{ matrix.name }}
           path: out/
@@ -145,7 +145,7 @@ jobs:
           mkdir -p asset
           cp out/xgpu.hdll "asset/xgpu-${{ matrix.platform }}.hdll"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: hdll-${{ matrix.platform }}
           path: asset/
@@ -166,7 +166,7 @@ jobs:
           - { os: ubuntu-24.04,  name: android-arm,   target: armv7-linux-androideabi }
           - { os: ubuntu-24.04,  name: android-x64,   target: x86_64-linux-android }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -206,7 +206,7 @@ jobs:
           cp LICENSE README.md out/
           ls -la out
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: hlwgpu-${{ matrix.name }}
           path: out/
@@ -217,7 +217,7 @@ jobs:
     if: needs.plan.outputs.build == 'true'
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # A side module is position-independent and the shipped core and std are
       # not, so they are rebuilt. That needs nightly and rust-src.
@@ -252,7 +252,7 @@ jobs:
           cp -r haxe out/
           cp haxelib.json LICENSE README.md crates/hlwgpu/IMPORTS.md out/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: hlwgpu-wasm-ash
           path: out/
@@ -263,7 +263,7 @@ jobs:
     if: needs.plan.outputs.build == 'true'
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Collect
         run: |
@@ -271,7 +271,7 @@ jobs:
           cp -r haxe out/
           cp haxelib.json LICENSE README.md out/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: hlwgpu-haxe
           path: out/
@@ -286,7 +286,7 @@ jobs:
     env:
       TAG: ${{ needs.plan.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Point the nightly tag at this build
         if: env.TAG == 'nightly'
@@ -294,7 +294,7 @@ jobs:
           git tag --force nightly "$GITHUB_SHA"
           git push --force origin refs/tags/nightly
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: artifacts
 
@@ -325,7 +325,7 @@ jobs:
       - name: Release notes
         run: python3 scripts/release_check.py notes release-notes.md
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           body_path: release-notes.md
           tag_name: ${{ env.TAG }}
