@@ -7,6 +7,7 @@ pub mod host {
     // The browser backend's; a native build has no use for them.
     #[allow(unused_imports)]
     pub use hl_xidl::host::{agent, watch};
+    pub use hl_xidl::host::throw_pending;
 
     use hl_xidl::ErrorKind;
 

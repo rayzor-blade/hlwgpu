@@ -287,6 +287,7 @@ version = "0.1.0"
 dependencies = [
  "ash_future_abi",
  "hl_abi 0.1.0 (git+https://github.com/rayzor-blade/hl_abi)",
+ "libc",
  "libloading",
 ]
 
@@ -1204,7 +1205,7 @@ dependencies = [
 [[package]]
 name = "x_idl"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/x-idl.git?rev=aba14dbfbac89f63bf7458711ea1ea21894d0d02#aba14dbfbac89f63bf7458711ea1ea21894d0d02"
+source = "git+https://github.com/rayzor-blade/x-idl.git?rev=61f3f9e775d1f2afe2a0573c30dd101eb88b1aed#61f3f9e775d1f2afe2a0573c30dd101eb88b1aed"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1215,12 +1216,12 @@ dependencies = [
 [[package]]
 name = "xgpu-backend"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=2284167d3a81ccbc143455835a123865682bc9f4#2284167d3a81ccbc143455835a123865682bc9f4"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=e473fafd0ccf77d8ee22d3103c5b0e07192e4591#e473fafd0ccf77d8ee22d3103c5b0e07192e4591"
 
 [[package]]
 name = "xgpu-bindgen"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=2284167d3a81ccbc143455835a123865682bc9f4#2284167d3a81ccbc143455835a123865682bc9f4"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=e473fafd0ccf77d8ee22d3103c5b0e07192e4591#e473fafd0ccf77d8ee22d3103c5b0e07192e4591"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1233,7 +1234,7 @@ dependencies = [
 [[package]]
 name = "xgpu-core"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=2284167d3a81ccbc143455835a123865682bc9f4#2284167d3a81ccbc143455835a123865682bc9f4"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=e473fafd0ccf77d8ee22d3103c5b0e07192e4591#e473fafd0ccf77d8ee22d3103c5b0e07192e4591"
 
 [[package]]
 name = "xml-rs"

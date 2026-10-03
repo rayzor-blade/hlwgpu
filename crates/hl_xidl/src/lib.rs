@@ -45,18 +45,25 @@ unsafe fn abstract_type() -> *mut hl_type {
     }
 }
 
+// Stock HashLink keeps Ash Future's ABI in ash_future.hdll, which it opens
+// without RTLD_GLOBAL, so that library is asked by name as well. RTLD_NOLOAD
+// only finds it if the program already loaded it.
+#[cfg(not(target_family = "wasm"))]
+const FUTURE_LIBRARY: &str = "ash_future.hdll";
+
 #[cfg(all(unix, not(target_family = "wasm")))]
 unsafe fn runtime_symbol<T: Copy>(name: &[u8]) -> Option<T> {
-    unsafe {
-        libloading::os::unix::Library::this()
-            .get::<T>(name)
+    use libloading::os::unix::{Library, RTLD_LAZY};
+    let lookup = |library: Library| unsafe { library.get::<T>(name).ok().map(|symbol| *symbol) };
+    lookup(Library::this()).or_else(|| unsafe {
+        Library::open(Some(FUTURE_LIBRARY), RTLD_LAZY | libc::RTLD_NOLOAD)
             .ok()
-            .map(|symbol| *symbol)
-    }
+            .and_then(lookup)
+    })
 }
 
 // The executable is Ash, or stock HashLink's hl.exe, which keeps its runtime
-// in libhl.dll.
+// in libhl.dll and Ash Future's in ash_future.hdll.
 #[cfg(windows)]
 unsafe fn runtime_symbol<T: Copy>(name: &[u8]) -> Option<T> {
     use libloading::os::windows::Library;
@@ -64,7 +71,16 @@ unsafe fn runtime_symbol<T: Copy>(name: &[u8]) -> Option<T> {
     Library::this()
         .ok()
         .and_then(lookup)
-        .or_else(|| Library::open_already_loaded("libhl.dll").ok().and_then(lookup))
+        .or_else(|| {
+            Library::open_already_loaded("libhl.dll")
+                .ok()
+                .and_then(lookup)
+        })
+        .or_else(|| {
+            Library::open_already_loaded(FUTURE_LIBRARY)
+                .ok()
+                .and_then(lookup)
+        })
 }
 
 /// `value` as a `Null<Int>`. Ash allocates against its GC-registered type
@@ -98,8 +114,10 @@ fn box_i32(value: i32) -> *mut vdynamic {
         })
     });
     let Some(boxer) = found else {
-        host::raise(ErrorKind::Runtime, "the runtime exports no way to box an Int");
-        unreachable!()
+        host::fail(
+            ErrorKind::Runtime,
+            "the runtime exports no way to box an Int",
+        )
     };
     let boxed = unsafe { (boxer.alloc)(boxer.ty) };
     if !boxed.is_null() {
@@ -118,13 +136,10 @@ fn future_create() -> FutureCreate {
     static SYMBOL: OnceLock<Option<FutureCreate>> = OnceLock::new();
     match *SYMBOL.get_or_init(|| unsafe { runtime_symbol(b"hlp_future_create\0") }) {
         Some(symbol) => symbol,
-        None => {
-            host::raise(
-                ErrorKind::Runtime,
-                "this API requires an Ash runtime with Future support",
-            );
-            unreachable!()
-        }
+        None => host::fail(
+            ErrorKind::Runtime,
+            "this API requires an Ash runtime with Future support",
+        ),
     }
 }
 
@@ -138,13 +153,10 @@ fn future_resolve() -> FutureSettle {
     static SYMBOL: OnceLock<Option<FutureSettle>> = OnceLock::new();
     match *SYMBOL.get_or_init(|| unsafe { runtime_symbol(b"hlp_future_resolve\0") }) {
         Some(symbol) => symbol,
-        None => {
-            host::raise(
-                ErrorKind::Runtime,
-                "this API requires an Ash runtime with Future support",
-            );
-            unreachable!()
-        }
+        None => host::fail(
+            ErrorKind::Runtime,
+            "this API requires an Ash runtime with Future support",
+        ),
     }
 }
 
@@ -161,13 +173,10 @@ fn future_reject() -> FutureSettle {
     static SYMBOL: OnceLock<Option<FutureSettle>> = OnceLock::new();
     match *SYMBOL.get_or_init(|| unsafe { runtime_symbol(b"hlp_future_reject\0") }) {
         Some(symbol) => symbol,
-        None => {
-            host::raise(
-                ErrorKind::Runtime,
-                "this API requires an Ash runtime with Future support",
-            );
-            unreachable!()
-        }
+        None => host::fail(
+            ErrorKind::Runtime,
+            "this API requires an Ash runtime with Future support",
+        ),
     }
 }
 
@@ -210,10 +219,37 @@ pub mod host {
         ) -> *const u32;
     }
 
-    /// Throw `message` to the calling Haxe code.
+    std::thread_local! {
+        static RAISED: std::cell::RefCell<Option<String>> = const { std::cell::RefCell::new(None) };
+    }
+
+    /// Records `message` for the calling Haxe code and returns, as every
+    /// runtime's `raise` does, so the backend unwinds normally and releases
+    /// what it holds. The generated wrapper throws it with `throw_pending`
+    /// once the call has returned. The first message of a call wins.
     pub fn raise(_: ErrorKind, message: &str) {
-        let text = Text::new(message);
-        unsafe { hl_throw(text.value().0) }
+        RAISED.with(|raised| {
+            raised
+                .borrow_mut()
+                .get_or_insert_with(|| message.to_owned());
+        });
+    }
+
+    /// Raises `message` and abandons the call. The generated wrapper catches
+    /// the unwind; `resume_unwind` skips the panic hook, so nothing is printed.
+    pub fn fail(kind: ErrorKind, message: &str) -> ! {
+        raise(kind, message);
+        std::panic::resume_unwind(Box::new(()))
+    }
+
+    /// Throws what `raise` recorded to the calling Haxe code. Throwing
+    /// longjmps past Rust frames without running their destructors, so only
+    /// the generated wrapper calls this, after the call has returned.
+    pub fn throw_pending() {
+        if let Some(message) = RAISED.with(|raised| raised.borrow_mut().take()) {
+            let text = Text::new(&message);
+            unsafe { hl_throw(text.value().0) }
+        }
     }
 
     /// Start a browser service through Ash's runtime-owned page harness.
@@ -585,14 +621,8 @@ unsafe extern "C" fn finalize<T>(value: *mut c_void) {
 pub fn managed_new<T>(value: T) -> *mut Managed<T> {
     const MEM_KIND_FINALIZER: i32 = 3;
     let size = i32::try_from(size_of::<Managed<T>>()).expect("a managed value is too large");
-    let managed = unsafe {
-        hl_gc_alloc_gen(
-            abstract_type(),
-            size,
-            MEM_KIND_FINALIZER,
-        )
-        .cast::<Managed<T>>()
-    };
+    let managed =
+        unsafe { hl_gc_alloc_gen(abstract_type(), size, MEM_KIND_FINALIZER).cast::<Managed<T>>() };
     assert!(
         !managed.is_null(),
         "HashLink could not allocate a managed value"

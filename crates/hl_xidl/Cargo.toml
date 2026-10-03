@@ -13,3 +13,6 @@ ash_future_abi = { git = "https://github.com/rayzor-blade/ash.git", rev = "ac80c
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Ash's Future entry points, looked up in the running VM.
 libloading = "0.8"
+
+[target.'cfg(all(unix, not(target_family = "wasm")))'.dependencies]
+libc = "0.2"
