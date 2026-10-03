@@ -7,6 +7,7 @@ import gpu.GpuBuffer;
 import gpu.GpuBufferDescriptor;
 import gpu.CompilationMessageType;
 import gpu.DeviceLostReason;
+import gpu.DownlevelFlag;
 import gpu.FilterMode;
 import gpu.GpuColor;
 import gpu.GpuComputePipelineDescriptor;
@@ -71,6 +72,10 @@ class GpuTest {
 			return;
 		}
 		check(adapter.valid(), "an adapter: " + adapter.name());
+		// A WebGPU adapter lacks none of what WebGPU requires.
+		check(adapter.supportsDownlevel(DownlevelFlag.ComputeShaders) && adapter.supportsDownlevel(DownlevelFlag.VertexStorage)
+			&& adapter.supportsDownlevel(DownlevelFlag.IndependentBlend) && adapter.supportsDownlevel(DownlevelFlag.BaseVertex),
+			"it is not downlevel");
 		var device = adapter.requestDevice().await();
 		check(device.valid(), "a device");
 		var queue = device.queue();

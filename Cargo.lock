@@ -1216,12 +1216,12 @@ dependencies = [
 [[package]]
 name = "xgpu-backend"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=e473fafd0ccf77d8ee22d3103c5b0e07192e4591#e473fafd0ccf77d8ee22d3103c5b0e07192e4591"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=71c25d19b99ef9557e56b2ac13cfce2715e582dd#71c25d19b99ef9557e56b2ac13cfce2715e582dd"
 
 [[package]]
 name = "xgpu-bindgen"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=e473fafd0ccf77d8ee22d3103c5b0e07192e4591#e473fafd0ccf77d8ee22d3103c5b0e07192e4591"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=71c25d19b99ef9557e56b2ac13cfce2715e582dd#71c25d19b99ef9557e56b2ac13cfce2715e582dd"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1234,7 +1234,7 @@ dependencies = [
 [[package]]
 name = "xgpu-core"
 version = "0.1.0"
-source = "git+https://github.com/rayzor-blade/xgpu.git?rev=e473fafd0ccf77d8ee22d3103c5b0e07192e4591#e473fafd0ccf77d8ee22d3103c5b0e07192e4591"
+source = "git+https://github.com/rayzor-blade/xgpu.git?rev=71c25d19b99ef9557e56b2ac13cfce2715e582dd#71c25d19b99ef9557e56b2ac13cfce2715e582dd"
 
 [[package]]
 name = "xml-rs"

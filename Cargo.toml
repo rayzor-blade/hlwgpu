@@ -10,9 +10,9 @@ hl_xidl = { path = "crates/hl_xidl" }
 # The generated model names Ash's Future carrier by this crate's path.
 ash_future_abi = { git = "https://github.com/rayzor-blade/ash.git", rev = "ac80cdb17c9fe82a0e86ab893e9d7304d5319fe6" }
 # One xgpu revision for all three; scripts/release_check.py holds them to it.
-xgpu-core = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "e473fafd0ccf77d8ee22d3103c5b0e07192e4591" }
-xgpu-backend = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "e473fafd0ccf77d8ee22d3103c5b0e07192e4591" }
-xgpu-bindgen = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "e473fafd0ccf77d8ee22d3103c5b0e07192e4591" }
+xgpu-core = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "71c25d19b99ef9557e56b2ac13cfce2715e582dd" }
+xgpu-backend = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "71c25d19b99ef9557e56b2ac13cfce2715e582dd" }
+xgpu-bindgen = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "71c25d19b99ef9557e56b2ac13cfce2715e582dd" }
 
 # A released hdll is loaded by a VM and never debugged through, so the symbol
 # table is dead weight; whole-program optimisation across one codegen unit is

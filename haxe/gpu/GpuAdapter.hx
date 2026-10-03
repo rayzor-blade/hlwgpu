@@ -14,6 +14,7 @@ abstract GpuAdapter(Int) from Int to Int {
 	public inline function driverInfo():String { var value = GpuAdapterNative.driverInfo(this); return value == null ? null : @:privateAccess String.fromUCS2(value); };
 	public inline function supportsNative(feature:NativeFeature):Bool return GpuAdapterNative.supportsNative(this, feature);
 	public inline function nativeLimit(which:NativeLimit):haxe.Int64 return GpuAdapterNative.nativeLimit(this, which);
+	public inline function supportsDownlevel(flag:DownlevelFlag):Bool return GpuAdapterNative.supportsDownlevel(this, flag);
 	public inline function textureFormatUsages(format:TextureFormat):Int return GpuAdapterNative.textureFormatUsages(this, format);
 	public inline function textureFormatFeatures(format:TextureFormat):Int return GpuAdapterNative.textureFormatFeatures(this, format);
 	public inline function vendorId():haxe.Int64 return GpuAdapterNative.vendorId(this);
@@ -50,6 +51,8 @@ private extern class GpuAdapterNative {
 	public static function supportsNative(self:Int, feature:NativeFeature):Bool;
 	@:hlNative("xgpu", "gpu_adapter_native_limit")
 	public static function nativeLimit(self:Int, which:NativeLimit):haxe.Int64;
+	@:hlNative("xgpu", "gpu_adapter_supports_downlevel")
+	public static function supportsDownlevel(self:Int, flag:DownlevelFlag):Bool;
 	@:hlNative("xgpu", "gpu_adapter_texture_format_usages")
 	public static function textureFormatUsages(self:Int, format:TextureFormat):Int;
 	@:hlNative("xgpu", "gpu_adapter_texture_format_features")
