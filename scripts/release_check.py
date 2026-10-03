@@ -5,7 +5,7 @@
     scripts/release_check.py notes <file>  # write the release notes' xgpu section
 
 `pins` checks that xgpu-core, xgpu-backend and xgpu-bindgen are pinned to one
-revision in crates/hlwgpu/Cargo.toml and resolved to it in Cargo.lock, and
+revision in the workspace's Cargo.toml and resolved to it in Cargo.lock, and
 that hlwgpu carries no WebGPU IDL of its own: the public API is xgpu's. The
 committed haxe/gpu package matching the pin is CI's generated-files check.
 
@@ -31,12 +31,12 @@ def fail(message: str) -> None:
 
 
 def pinned_revision() -> str:
-    manifest = (ROOT / "crates" / "hlwgpu" / "Cargo.toml").read_text()
+    manifest = (ROOT / "Cargo.toml").read_text()
     revs = {}
     for crate in CRATES:
         found = re.findall(rf'^{crate}\s*=\s*{{[^}}]*rev\s*=\s*"([0-9a-f]+)"', manifest, re.M)
         if not found:
-            fail(f"crates/hlwgpu/Cargo.toml does not pin {crate} by rev")
+            fail(f"the workspace's Cargo.toml does not pin {crate} by rev")
         revs.update({crate if n == 0 else f"{crate} (#{n + 1})": rev for n, rev in enumerate(found)})
     if len(set(revs.values())) != 1:
         listed = ", ".join(f"{name} at {rev}" for name, rev in sorted(revs.items()))

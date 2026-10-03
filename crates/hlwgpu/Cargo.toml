@@ -8,8 +8,7 @@ publish = false
 
 [lib]
 # cdylib is the `.hdll` a HashLink VM loads; staticlib is what the wasm side
-# module is linked from; rlib is so tests and the future host crate can use
-# the same code without building it twice.
+# module is linked from; rlib is what tests link.
 crate-type = ["cdylib", "staticlib", "rlib"]
 
 [features]
@@ -19,14 +18,13 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 vulkan = ["wgpu/vulkan"]
 
 [build-dependencies]
-xgpu-backend = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "e473fafd0ccf77d8ee22d3103c5b0e07192e4591" }
-xgpu-bindgen = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "e473fafd0ccf77d8ee22d3103c5b0e07192e4591" }
+xgpu-backend = { workspace = true }
+xgpu-bindgen = { workspace = true }
 
-# One backend each, the one the platform actually uses. wgpu will compile
-# every backend it is given and only some are gated out by target, so leaving
-# the defaults on builds Vulkan into a macOS library that will never call it.
-# No `gles`: this library does not offer OpenGL. No `webgpu`: that is for a
-# wasm32-unknown-unknown build, and ours is wasip1.
+# The backends each platform uses. wgpu compiles every backend it is given and
+# gates only some out by target, so the defaults would build Vulkan into a
+# macOS library that never calls it. OpenGL ES is Android's alone. No
+# `webgpu`: that is for a wasm32-unknown-unknown build, and ours is wasip1.
 [target.'cfg(target_vendor = "apple")'.dependencies]
 wgpu = { version = "30", default-features = false, features = [
   "std", "parking_lot", "wgsl", "metal",
@@ -50,9 +48,8 @@ wgpu = { version = "30", default-features = false, features = [
 [dependencies]
 hl_abi = { workspace = true }
 hl_xidl = { workspace = true }
-# The generated model names Ash's Future carrier by this crate's path.
-ash_future_abi = { git = "https://github.com/rayzor-blade/ash.git", rev = "ac80cdb17c9fe82a0e86ab893e9d7304d5319fe6" }
-xgpu-core = { git = "https://github.com/rayzor-blade/xgpu.git", rev = "e473fafd0ccf77d8ee22d3103c5b0e07192e4591" }
+ash_future_abi = { workspace = true }
+xgpu-core = { workspace = true }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # The generated native backend uses these alongside its platform's wgpu.
