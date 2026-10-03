@@ -6,7 +6,7 @@ name: gpu
 # for D3D12, and SwiftShader for the browser's WebGPU.
 on:
   push:
-    branches: [main]
+    branches: [main, 'ci/**']
   pull_request:
   workflow_dispatch:
 
