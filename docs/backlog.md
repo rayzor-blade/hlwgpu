@@ -17,39 +17,33 @@ Feature coverage of the shared API is tracked in
 [xgpu](https://github.com/rayzor-blade/xgpu). hlwgpu should not maintain a
 second operation or enum count.
 
-## Highest-value remaining work
+## How it is tested
 
-### Browser execution tests
+`crates/hlwgpu/test/browser/GpuTest.hx` checks what the GPU hands back:
+compute and rendering by exact readback, copies, queries, and the errors and
+rejections a program observes through `ash.Future`. The `gpu` workflow runs it
 
-`scripts/browser_test.sh` loads the threaded `xgpu.wasm` bundle through Ash's
-page in headless Chrome and runs `crates/hlwgpu/test/browser/GpuTest.hx`
-against a real browser adapter: compute and rendering checked by exact
-readback, and failures observed through `ash.Future`. It runs locally; CI
-still needs a runner with an Ash that loads page side modules and a WebGPU
-adapter, software on a machine without a GPU (`CHROME_FLAGS`).
+- on stock HashLink with `ash_future.hdll` (`scripts/native_test.sh`), on
+  Linux with lavapipe for Vulkan and on Windows with WARP for D3D12;
+- on Ash for Metal, since stock HashLink's JIT does not run on arm64 macOS;
+- in headless Chrome through Ash's page on SwiftShader
+  (`scripts/browser_test.sh`).
 
-### Host conformance
+A runner that exposes no adapter reports SKIP rather than failing.
 
-`hlwgpu.js` lets another runtime locate and load the side module, and
-`IMPORTS.md` specifies the ABI. A small conformance harness should verify a
-non-Ash loader against the same mailbox and Future behavior.
+`crates/hlwgpu/test/host` holds `xgpu.wasm` to `IMPORTS.md` with a host that
+shares no code with Ash (`scripts/host_test.sh`): its own dylink loader,
+HashLink carriers, Future hooks and agent worker.
 
-### Package the Future dependency
-
-Ash already provides the Future ABI. The release story for a program launched
-by upstream HashLink should make the matching `ash.Future` Haxe package and
-runtime symbols explicit and easy to install.
-
-### Runtime smoke tests
-
-Release jobs prove that every target compiles. Add small execution tests on
-available Metal, D3D12, Vulkan/lavapipe, and browser WebGPU runners so adapter
-selection, resource lifetime, and async completion are exercised as well.
+Programs on upstream HashLink take `ash.Future` from Ash's `ash-future`
+haxelib, whose release ZIP carries `ash_future.hdll`; see
+[using hlwgpu](using.md).
 
 ## Release maintenance
 
-- Keep hlwgpu pinned to one xgpu revision for `xgpu-core`, `xgpu-backend`, and
-  `xgpu-bindgen`.
-- Regenerate and commit `haxe/gpu` whenever that pin changes.
-- Keep the haxelib version and a versioned release tag aligned.
-- Use xgpu's vendored WebGPU IDL as the canonical API input.
+`scripts/release_check.py` fails CI and a release when `xgpu-core`,
+`xgpu-backend` and `xgpu-bindgen` are not pinned to one xgpu revision, or when
+hlwgpu tracks WebGPU IDL of its own; xgpu's vendored IDL is the API's input.
+CI fails when a build changes the committed `haxe/gpu`, so a new pin has to be
+regenerated and committed. A versioned release takes its Haxelib version from
+its tag, and its notes name the pinned xgpu and the IDL snapshot it carries.
