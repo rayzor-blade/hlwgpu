@@ -36,6 +36,9 @@ jobs:
             libxkbcommon-dev libwayland-dev libx11-dev libxrandr-dev \
             libxi-dev libxcursor-dev
 
+      - name: The xgpu crates share one pinned revision
+        run: python3 scripts/release_check.py pins
+
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 

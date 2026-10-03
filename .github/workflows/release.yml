@@ -50,6 +50,7 @@ jobs:
           if [ -n "$tag" ] && [ "$tag" != nightly ]; then
             python3 -c 'import sys; sys.path.insert(0, "scripts"); from package_haxelib import version_of; print(version_of(sys.argv[1]))' "$tag"
           fi
+          python3 scripts/release_check.py pins
           build=true
           if [ "$EVENT" = schedule ]; then
             current=$(gh api "repos/$GITHUB_REPOSITORY/commits/nightly" --jq .sha 2>/dev/null || true)
@@ -320,8 +321,13 @@ jobs:
           fi
           ls -la release
 
+      # Names the xgpu revision and the WebGPU IDL snapshot it carries.
+      - name: Release notes
+        run: python3 scripts/release_check.py notes release-notes.md
+
       - uses: softprops/action-gh-release@v2
         with:
+          body_path: release-notes.md
           tag_name: ${{ env.TAG }}
           target_commitish: ${{ github.sha }}
           files: |
