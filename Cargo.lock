@@ -282,10 +282,6 @@ version = "0.1.0"
 source = "git+https://github.com/rayzor-blade/hl_abi#78c5c70d3da5aedc5b1d4550c73e2d3b591c18a5"
 
 [[package]]
-name = "hl_native_gen"
-version = "0.1.0"
-
-[[package]]
 name = "hl_xidl"
 version = "0.1.0"
 dependencies = [
