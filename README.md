@@ -1,4 +1,4 @@
-<img src="./hlwgpu.png" width="250" alt="HashLink WebGPU" align="right" />
+<img src="https://raw.githubusercontent.com/rayzor-blade/hlwgpu/main/hlwgpu.png" width="250" alt="HashLink WebGPU" align="right" />
 
 # hlwgpu
 

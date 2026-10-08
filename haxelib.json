@@ -5,8 +5,8 @@
   "tags": ["gpu", "webgpu", "graphics", "hashlink", "wgpu"],
   "description": "WebGPU for Haxe on Ash and HashLink, backed by xgpu and wgpu.",
   "contributors": ["rayzor", "darmie"],
-  "version": "0.1.0",
-  "releasenote": "xgpu-generated WebGPU API, native hdlls, a browser side module, and HXSL-to-WGSL support.",
+  "version": "0.1.1",
+  "releasenote": "Use a public GitHub logo URL in the Haxelib README.",
   "classPath": "haxe",
   "dependencies": {
     "ash-future": ""
