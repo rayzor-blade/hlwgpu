@@ -336,3 +336,13 @@ jobs:
           generate_release_notes: true
           prerelease: ${{ env.TAG == 'nightly' }}
           make_latest: ${{ env.TAG == 'nightly' && 'false' || 'true' }}
+
+  publish-haxelib:
+    name: Publish Haxelibs
+    needs: [plan, publish]
+    if: needs.plan.outputs.tag != '' && needs.plan.outputs.tag != 'nightly'
+    uses: ./.github/workflows/publish.yml
+    with:
+      release_tag: ${{ needs.plan.outputs.tag }}
+    secrets:
+      HAXELIB_PASSWORD: ${{ secrets.HAXELIB_PASSWORD }}

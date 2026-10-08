@@ -4,7 +4,7 @@
   "license": "MIT",
   "tags": ["gpu", "webgpu", "graphics", "hashlink", "wgpu"],
   "description": "WebGPU for Haxe on Ash and HashLink, backed by xgpu and wgpu.",
-  "contributors": ["darmie"],
+  "contributors": ["rayzor", "darmie"],
   "version": "0.1.0",
   "releasenote": "xgpu-generated WebGPU API, native hdlls, a browser side module, and HXSL-to-WGSL support.",
   "classPath": "haxe",
