@@ -9,10 +9,21 @@ import sys.FileSystem;
 import sys.io.File;
 import sys.io.Process;
 
-/** Copy the bundled host xgpu.hdll beside HashLink bytecode. */
+/**
+	Copy the bundled host xgpu.hdll beside HashLink bytecode. A build defined
+	`wasm` is for a page: it gets the web build's `xgpu.wasm` and the scripts
+	that run beside it (`web/` in the package, or the directory `-D hlwgpu_web`
+	names) in place of the desktop library.
+*/
 class NativeInstall {
+	static final WEB_FILES = ["xgpu.wasm", "gpu.mjs", "gpu-worker.mjs", "gpu-agent.mjs", "hlwgpu.js"];
+
 	public static function stage():Void {
 		if (!Context.defined("hl") || Context.defined("hlc") || Context.defined("hlwgpu_no_hdll")) return;
+		if (Context.defined("wasm")) {
+			stageWeb();
+			return;
+		}
 		Context.onAfterGenerate(() -> {
 			var platform = hostPlatform();
 			// The haxelib root holds haxe/hlwgpu/macro/NativeInstall.hx.
@@ -35,6 +46,24 @@ class NativeInstall {
 			}
 			var destination = Path.join([Path.directory(Compiler.getOutput()), "xgpu.hdll"]);
 			if (Path.normalize(source) != Path.normalize(destination)) File.copy(source, destination);
+		});
+	}
+
+	static function stageWeb():Void {
+		Context.onAfterGenerate(() -> {
+			var module = Context.resolvePath("hlwgpu/macro/NativeInstall.hx");
+			var root = Path.directory(Path.directory(Path.directory(Path.directory(module))));
+			var web = Context.defined("hlwgpu_web") ? Context.definedValue("hlwgpu_web") : Path.join([root, "web"]);
+			var into = Path.directory(Compiler.getOutput());
+			for (name in WEB_FILES) {
+				var source = Path.join([web, name]);
+				if (!FileSystem.exists(source)) {
+					Context.fatalError('hlwgpu is missing $source; install the release Haxelib ZIP, or name the wasm build with -D hlwgpu_web=<directory>', Context.currentPos());
+					return;
+				}
+				var destination = Path.join([into, name]);
+				if (Path.normalize(source) != Path.normalize(destination)) File.copy(source, destination);
+			}
 		});
 	}
 

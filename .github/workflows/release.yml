@@ -315,9 +315,9 @@ jobs:
         run: |
           # A versioned tag stamps its version; the nightly keeps haxelib.json's.
           if [ "$TAG" = nightly ]; then
-            python3 scripts/package_haxelib.py release
+            python3 scripts/package_haxelib.py release --web artifacts/hlwgpu-wasm-ash
           else
-            python3 scripts/package_haxelib.py release --version "$TAG"
+            python3 scripts/package_haxelib.py release --web artifacts/hlwgpu-wasm-ash --version "$TAG"
           fi
           ls -la release
 
