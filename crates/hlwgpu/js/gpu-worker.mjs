@@ -2,6 +2,19 @@
 
 import { start } from "./gpu-agent.mjs";
 
+// A device the browser takes back, as when the GPU process crashes or hangs, leaves the canvas as it was and draws
+// nothing more. It is said on the console and passed to the page, which can show it.
+const requestDevice = GPUAdapter.prototype.requestDevice;
+GPUAdapter.prototype.requestDevice = async function (...args) {
+  const device = await requestDevice.apply(this, args);
+  device.lost.then((info) => {
+    if (info.reason === "destroyed") return;
+    console.error(`xgpu: the GPU device was lost (${info.reason}): ${info.message}`);
+    self.postMessage({ kind: "device-lost", reason: info.reason, message: info.message });
+  });
+  return device;
+};
+
 start(async ({ canvas }) => {
   if (!navigator.gpu) throw new Error("this browser exposes no WebGPU");
   const context = canvas.getContext("webgpu");
