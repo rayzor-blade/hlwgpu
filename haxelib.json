@@ -5,8 +5,8 @@
   "tags": ["gpu", "webgpu", "graphics", "hashlink", "wgpu"],
   "description": "WebGPU for Haxe on Ash and HashLink, backed by xgpu and wgpu.",
   "contributors": ["rayzor", "darmie"],
-  "version": "0.1.1",
-  "releasenote": "Use a public GitHub logo URL in the Haxelib README.",
+  "version": "0.2.0",
+  "releasenote": "Ships the web build, which a build defined wasm stages beside the program, and tells a page when the browser takes the GPU device back.",
   "classPath": "haxe",
   "dependencies": {
     "ash-future": ""
