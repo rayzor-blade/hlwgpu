@@ -19,6 +19,8 @@
 set -e
 
 here=$(cd "$(dirname "$0")/.." && pwd)
+# The Rust toolchain to build with, as rustup names it. See the guard at the end.
+nightly=${RUST_NIGHTLY:-nightly}
 out=${1:-"$here/target/wasm"}
 mkdir -p "$out"
 rm -f "$out/wgpu.wasm" "$out/hlwgpu.js"
@@ -26,11 +28,11 @@ rm -f "$out/wgpu.wasm" "$out/hlwgpu.js"
 HLWGPU_WASM_JS_OUT="$out" \
 CARGO_PROFILE_RELEASE_LTO=false \
 RUSTFLAGS="-C relocation-model=pic -C target-feature=+mutable-globals -C panic=abort" \
-  cargo +nightly rustc -p hlwgpu --lib --crate-type staticlib \
+  cargo +"$nightly" rustc -p hlwgpu --lib --crate-type staticlib \
     --target wasm32-wasip1-threads --release \
     -Z build-std=std,panic_abort
 
-lld=$(find "$(rustc +nightly --print sysroot)/lib/rustlib" -name rust-lld -type f | head -1)
+lld=$(find "$(rustc +"$nightly" --print sysroot)/lib/rustlib" -name rust-lld -type f | head -1)
 [ -n "$lld" ] || { echo "no rust-lld in the nightly sysroot" >&2; exit 1; }
 
 # One resolver export per generated Haxe primitive. The file name is xgpu.wasm
@@ -51,4 +53,11 @@ exports=$(sed -n 's/.*@:hlNative("xgpu", "\([^"]*\)").*/--export=hlp_\1/p' \
 cp "$here/crates/hlwgpu/js/gpu.mjs" "$out/gpu.mjs"
 cp "$here/crates/hlwgpu/js/gpu-worker.mjs" "$out/gpu-worker.mjs"
 cp "$here/crates/hlwgpu/js/hlwgpu.js" "$out/hlwgpu.js"
+# A newer nightly's std imports pthread keys, which Ash does not define: say so here, not when a program that loads it is built.
+if grep -q pthread_key_create "$out/xgpu.wasm"; then
+  echo "build_wasm: $out/xgpu.wasm imports pthread_key_create, which Ash does not define; this Rust nightly is too new. Build with RUST_NIGHTLY=nightly-2026-08-25." >&2
+  exit 1
+fi
+
 echo "wrote $out/xgpu.wasm ($(wc -c < "$out/xgpu.wasm" | tr -d ' ') bytes), hlwgpu.js and browser agent modules"
+
